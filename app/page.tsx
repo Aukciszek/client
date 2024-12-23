@@ -2,97 +2,84 @@
 
 import { useState } from 'react';
 
-function binaryExponentiation(b: number, k: number, n: number): number {
-  let a = 1;
+const bigIntMax = (...args: bigint[]): bigint =>
+  args.reduce((m, e) => (e > m ? e : m));
+
+function binaryExponentiation(b: bigint, k: bigint, n: bigint): bigint {
+  let a = BigInt(1);
   while (k > 0) {
-    if (k & 1) {
+    if (k & BigInt(1)) {
       a = (a * b) % n;
     }
     b = (b * b) % n;
-    k = k >> 1;
+    k = BigInt(k) >> BigInt(1);
   }
   return a;
 }
 
-function getRandomBits(bitLength: number): number {
+function getRandomBits(bitLength: number): bigint {
   const byteLength = Math.ceil(bitLength / 8);
   const randomBytes = new Uint8Array(byteLength);
   crypto.getRandomValues(randomBytes);
 
-  let randomNumber = 0;
+  let randomNumber = BigInt(0);
   for (let i = 0; i < byteLength; i++) {
-    randomNumber = (randomNumber << 8) | randomBytes[i];
+    randomNumber = (randomNumber << BigInt(8)) | BigInt(randomBytes[i]);
   }
 
   return randomNumber;
 }
 
-function getSecureRandomInt(min: number, max: number): number {
+function getSecureRandomInt(min: bigint, max: bigint): bigint {
+  // min is inclusive, max is exclusive
   const range = max - min;
-  if (range <= 0) throw new Error('Invalid range for secure random generation');
+  const bitLength = range.toString(2).length;
+  let randomNumber = BigInt(0);
 
-  const byteArray = new Uint8Array(4);
-  let randomInt = 0;
+  while (randomNumber < min) {
+    randomNumber = getRandomBits(bitLength);
+  }
 
-  do {
-    crypto.getRandomValues(byteArray);
-    randomInt =
-      (byteArray[0] << 24) |
-      (byteArray[1] << 16) |
-      (byteArray[2] << 8) |
-      byteArray[3];
-    randomInt = Math.abs(randomInt % range);
-  } while (randomInt < 0);
-
-  return randomInt + min;
+  return (randomNumber % range) + min;
 }
 
-function getPower2Factors(n: number): [number, number] {
+function getPower2Factors(n: bigint): [number, bigint] {
   let r = 0;
-  let d = n;
 
-  while (d > 0 && d % 2 === 0) {
-    d = Math.floor(d / 2);
+  while (n > 0 && n % BigInt(2) === BigInt(0)) {
+    n = n / BigInt(2);
     r += 1;
   }
 
-  return [r, d];
+  return [r, n];
 }
 
-function f(x: number, coefficients: number[], p: number, t: number): number {
-  let result = 0;
-  for (let i = 0; i < t; i++) {
-    result += coefficients[i] * binaryExponentiation(x, i, p);
-  }
-  return result % p;
-}
-
-function millerRabinPrimeTest(n: number, k: number): boolean {
+function millerRabinPrimeTest(n: bigint, k: number): boolean {
   if (n <= 1) return false;
   if (n <= 3) return true;
-  if (n % 2 === 0) return false;
+  if (n % BigInt(2) === BigInt(0)) return false;
 
-  const [r, d] = getPower2Factors(n - 1);
+  const [r, d] = getPower2Factors(n - BigInt(1));
 
   for (let i = 0; i < k; i++) {
     let a = getRandomBits(n.toString(2).length);
 
-    while (a < 2 || a >= n - 2 + 1) {
+    while (a < 2 || a >= n - BigInt(2) + BigInt(1)) {
       a = getRandomBits(n.toString(2).length);
     }
 
-    let x = binaryExponentiation(a, d, n);
+    let x = binaryExponentiation(BigInt(a), BigInt(d), BigInt(n));
 
-    if (x === 1 || x === n - 1) {
+    if (x === BigInt(1) || x === n - BigInt(1)) {
       continue;
     }
 
     let n_1_found = false;
 
     for (let j = 0; j < r - 1; j++) {
-      x = binaryExponentiation(x, 2, n);
+      x = binaryExponentiation(BigInt(x), BigInt(2), BigInt(n));
 
-      if (x === n - 1) {
+      if (x === n - BigInt(1)) {
         n_1_found = true;
         break;
       }
@@ -106,28 +93,37 @@ function millerRabinPrimeTest(n: number, k: number): boolean {
   return true;
 }
 
+function f(x: number, coefficients: bigint[], p: bigint, t: number): bigint {
+  let result = BigInt(0);
+  for (let i = 0; i < t; i++) {
+    result +=
+      BigInt(coefficients[i]) * binaryExponentiation(BigInt(x), BigInt(i), p);
+  }
+  return result % p;
+}
+
 function shamir(
   t: number,
   n: number,
-  k0: number,
-): [Array<[number, number]>, number] {
-  const maxVal = Math.max(k0, n);
-  let p = getSecureRandomInt(maxVal + 1, 2 * maxVal); // TODO: Need to generate a prime number with more bytes
+  k0: bigint,
+): [Array<[number, bigint]>, bigint] {
+  const maxVal = bigIntMax(k0, BigInt(n));
+  let p = getSecureRandomInt(maxVal + BigInt(1), BigInt(2) * maxVal); // TODO: Need to find greater prime number
 
-  while (!millerRabinPrimeTest(p, 100)) {
-    p = getSecureRandomInt(maxVal + 1, 2 * maxVal);
+  while (!millerRabinPrimeTest(p, 64)) {
+    p = getSecureRandomInt(maxVal + BigInt(1), BigInt(2) * maxVal);
   }
 
-  const coefficients: number[] = Array.from({ length: t }, () =>
-    getSecureRandomInt(0, p - 1),
+  const coefficients: bigint[] = Array.from({ length: t }, () =>
+    getSecureRandomInt(BigInt(0), p),
   );
   coefficients[0] = k0;
 
-  if (coefficients[coefficients.length - 1] === 0) {
-    coefficients[coefficients.length - 1] = getSecureRandomInt(1, p - 1);
+  if (coefficients[coefficients.length - 1] === BigInt(0)) {
+    coefficients[coefficients.length - 1] = getSecureRandomInt(BigInt(1), p);
   }
 
-  const shares: Array<[number, number]> = [];
+  const shares: Array<[number, bigint]> = [];
 
   for (let i = 1; i <= n; i++) {
     shares.push([i, f(i, coefficients, p, t)]);
@@ -139,9 +135,9 @@ function shamir(
 export default function Home() {
   const [t, setT] = useState<number>(0);
   const [n, setN] = useState<number>(0);
-  const [k0, setK0] = useState<number>(0);
-  const [shares, setShares] = useState<Array<[number, number]>>([]);
-  const [p, setP] = useState<number>(0);
+  const [k0, setK0] = useState<bigint>(BigInt(0));
+  const [shares, setShares] = useState<Array<[number, bigint]>>([]);
+  const [p, setP] = useState<bigint>(BigInt(0));
 
   const handleSubmit = () => {
     const [shares, p] = shamir(t, n, k0);
@@ -158,7 +154,7 @@ export default function Home() {
   };
 
   const handleK0Change = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setK0(parseInt(e.target.value));
+    setK0(BigInt(e.target.value));
   };
 
   return (
@@ -173,7 +169,7 @@ export default function Home() {
       </div>
       <div>
         <label htmlFor='k0'>k0: </label>
-        <input type='text' value={k0} onChange={handleK0Change} />
+        <input type='text' value={k0.toString()} onChange={handleK0Change} />
       </div>
       <button
         className='w-36 bg-slate-700 text-white p-2 rounded'
