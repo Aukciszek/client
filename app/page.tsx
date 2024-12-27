@@ -2,9 +2,6 @@
 
 import { useState } from 'react';
 
-const bigIntMax = (...args: bigint[]): bigint =>
-  args.reduce((m, e) => (e > m ? e : m));
-
 function binaryExponentiation(b: bigint, k: bigint, n: bigint): bigint {
   let a = BigInt(1);
   while (k > 0) {
@@ -44,9 +41,13 @@ function getSecureRandomInt(min: bigint, max: bigint): bigint {
 }
 
 function getPower2Factors(n: bigint): [number, bigint] {
+  if (n <= 0) {
+    return [0, BigInt(0)];
+  }
+
   let r = 0;
 
-  while (n > 0 && n % BigInt(2) === BigInt(0)) {
+  while (n % BigInt(2) === BigInt(0)) {
     n = n / BigInt(2);
     r += 1;
   }
@@ -107,11 +108,10 @@ function shamir(
   n: number,
   k0: bigint,
 ): [Array<[number, bigint]>, bigint] {
-  const maxVal = bigIntMax(k0, BigInt(n));
-  let p = getSecureRandomInt(maxVal + BigInt(1), BigInt(2) * maxVal); // TODO: Need to find greater prime number
+  let p = getRandomBits(2048);
 
   while (!millerRabinPrimeTest(p, 64)) {
-    p = getSecureRandomInt(maxVal + BigInt(1), BigInt(2) * maxVal);
+    p = getRandomBits(2048);
   }
 
   const coefficients: bigint[] = Array.from({ length: t }, () =>
