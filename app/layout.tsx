@@ -25,8 +25,11 @@ export default function RootLayout({
   return (
     <html lang='en'>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} font-mono bg-slate-50 antialiased`}
       >
+        <header className='flex justify-center p-4 bg-sky-300 text-neutral-950'>
+          <h1 className='text-3xl'>{metadata.title as string}</h1>
+        </header>
         {children}
       </body>
     </html>
