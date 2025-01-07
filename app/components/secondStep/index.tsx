@@ -4,9 +4,8 @@ import type { MainPropsWithStep } from '@/app/interface';
 import { useState } from 'react';
 import {
   handleCalculateMultiplicativeShare,
-  handleCalculateR,
+  handleCalculateQAndRAndRedistribute,
   handleReconstructSecret,
-  handleSendRToOtherParties,
   handleShamir,
 } from './helpers';
 import Button from '../ui/button';
@@ -25,9 +24,10 @@ export default function SecondStep({
   >([]);
   const [firstClientId, setFirstClientId] = useState<number>(0);
   const [secondClientId, setSecondClientId] = useState<number>(0);
-  const [isRCaluclated, seItsRCalculated] = useState<boolean>(false);
-  const [isRSendToOtherParties, setIsRSendToOtherParties] =
-    useState<boolean>(false);
+  const [
+    isRAndQCalculatedAndRedistributed,
+    seItsRAndQCalculatedAndRedistributed,
+  ] = useState<boolean>(false);
   const [isMultiplicativeShareCalculated, setIsMultiplicativeShareCalculated] =
     useState<boolean>(false);
   const [isSecretReconstructed, setIsSecretReconstructed] =
@@ -39,14 +39,13 @@ export default function SecondStep({
     await handleShamir(secret, id, t, n, servers);
   };
 
-  const handleCalculateRClick = async () => {
-    await handleCalculateR(firstClientId, secondClientId, servers);
-    seItsRCalculated(true);
-  };
-
-  const handleSendRClick = async () => {
-    await handleSendRToOtherParties(servers);
-    setIsRSendToOtherParties(true);
+  const handleCalculateQAndRAndRedistributeClick = async () => {
+    await handleCalculateQAndRAndRedistribute(
+      firstClientId,
+      secondClientId,
+      servers,
+    );
+    seItsRAndQCalculatedAndRedistributed(true);
   };
 
   const handleCalculateMultiplicativeShareClick = async () => {
@@ -107,11 +106,10 @@ export default function SecondStep({
           onChange={(e) => setSecondClientId(Number(e.target.value))}
         />
       </div>
-      <Button callback={handleCalculateRClick}>Calculate r</Button>
-      {isRCaluclated && (
-        <Button callback={handleSendRClick}>Send r to other parties</Button>
-      )}
-      {isRSendToOtherParties && (
+      <Button callback={handleCalculateQAndRAndRedistributeClick}>
+        Calculate q and r and redistribute
+      </Button>
+      {isRAndQCalculatedAndRedistributed && (
         <Button callback={handleCalculateMultiplicativeShareClick}>
           Calculate Multiplicative Share
         </Button>
