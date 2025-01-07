@@ -20,19 +20,31 @@ export const handleShamir = async (
         client_id: id,
         share: Number(shares[i][1]),
       }),
-    }).then((res) => res.json()),
+    }),
   );
 
   await Promise.all(promises);
 };
 
-export const handleCalculateR = async (
+export const handleCalculateQAndRAndRedistribute = async (
   firstClientId: number,
   secondClientId: number,
   servers: string[],
 ): Promise<void> => {
-  const promises = servers.map((server) =>
-    fetch(`${server}/api/calculate-r`, {
+  const promises_q = servers.map((server) =>
+    fetch(`${server}/api/redistribute-q`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        Accept: 'application/json',
+      },
+    }),
+  );
+
+  await Promise.all(promises_q);
+
+  const promises_r = servers.map((server) =>
+    fetch(`${server}/api/redistribute-r`, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -42,26 +54,10 @@ export const handleCalculateR = async (
         first_client_id: firstClientId,
         second_client_id: secondClientId,
       }),
-    }).then((res) => res.json()),
+    }),
   );
 
-  await Promise.all(promises);
-};
-
-export const handleSendRToOtherParties = async (
-  servers: string[],
-): Promise<void> => {
-  const promises = servers.map((server) =>
-    fetch(`${server}/api/send-r-to-parties`, {
-      method: 'PUT',
-      headers: {
-        'content-type': 'application/json',
-        Accept: 'application/json',
-      },
-    }).then((res) => res.json()),
-  );
-
-  await Promise.all(promises);
+  await Promise.all(promises_r);
 };
 
 export const handleCalculateMultiplicativeShare = async (
@@ -74,7 +70,7 @@ export const handleCalculateMultiplicativeShare = async (
         'content-type': 'application/json',
         Accept: 'application/json',
       },
-    }).then((res) => res.json()),
+    }),
   );
 
   await Promise.all(promises);
