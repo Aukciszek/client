@@ -1,4 +1,4 @@
-import { PRIME_NUMBER } from '../constants';
+import { PRIME_NUMBER } from '../app/constants';
 
 export function binaryExponentiation(b: bigint, k: bigint, n: bigint): bigint {
   let a = BigInt(1);

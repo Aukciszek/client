@@ -59,6 +59,17 @@ export default function SecondStep({
     setReconstructedSecret(secrets);
   };
 
+  const handleClearData = () => {
+    setId(0);
+    setSecret(0);
+    setReconstructedSecret([]);
+    setFirstClientId(0);
+    setSecondClientId(0);
+    seItsRAndQCalculatedAndRedistributed(false);
+    setIsMultiplicativeShareCalculated(false);
+    setIsSecretReconstructed(false);
+  };
+
   return (
     <>
       <div className='mt-8 flex flex-col'>
@@ -105,6 +116,7 @@ export default function SecondStep({
           className='mb-4 bg-sky-300 rounded-xl px-4 py-2'
           onChange={(e) => setSecondClientId(Number(e.target.value))}
         />
+        <Button callback={handleClearData}>Clear data</Button>
       </div>
       <Button callback={handleCalculateQAndRAndRedistributeClick}>
         Calculate q and r and redistribute
