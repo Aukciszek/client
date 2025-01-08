@@ -1,4 +1,4 @@
-import { PRIME_NUMBER } from '../constants';
+import { PRIME_NUMBER } from '../app/constants';
 
 export const sendInitialData = async (
   servers: string[],

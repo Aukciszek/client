@@ -45,6 +45,15 @@ export default function ServerSetup({
     getInitialValues(setT, setN, setServers, setGetInitialValuesError);
   };
 
+  const handleClearData = () => {
+    setT(0);
+    setN(0);
+    setServers([]);
+    setCurrentServer('');
+    setInitialValuesError('');
+    setGetInitialValuesError('');
+  };
+
   return (
     <>
       <div className='mt-8'>
@@ -97,6 +106,7 @@ export default function ServerSetup({
           </button>
         </div>
         <Button>Submit</Button>
+        <Button callback={handleClearData}>Clear data</Button>
         {initialValuesError && (
           <p className='text-red-500'>{initialValuesError}</p>
         )}
