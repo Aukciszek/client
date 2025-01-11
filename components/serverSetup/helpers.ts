@@ -7,15 +7,19 @@ export const getInitialValues = async (
   setServers: SetStringArray,
   initialValuesServer: string,
 ): Promise<void> => {
-  await fetch(`${initialValuesServer}/api/initial-values`).then(async (res) => {
-    const data = await res.json();
-    if (!res.ok) {
-      toast.error(data.detail);
-    } else {
-      setT(data.t);
-      setN(data.n);
-      setServers(data.parties);
-      toast.success(data.result);
-    }
-  });
+  await fetch(`${initialValuesServer}/api/initial-values`)
+    .then(async (res) => {
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.detail);
+      } else {
+        setT(data.t);
+        setN(data.n);
+        setServers(data.parties);
+        toast.success(data.result);
+      }
+    })
+    .catch((err) => {
+      toast.error(err.message);
+    });
 };

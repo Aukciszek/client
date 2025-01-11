@@ -10,7 +10,6 @@ import {
 } from './helpers';
 import Button from '../ui/button';
 import { MdNavigateBefore } from 'react-icons/md';
-import { ToastContainer } from 'react-toastify';
 
 export default function SecondStep({
   t,
@@ -151,7 +150,6 @@ export default function SecondStep({
       >
         <MdNavigateBefore />
       </button>
-      <ToastContainer />
     </>
   );
 }

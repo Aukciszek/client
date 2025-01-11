@@ -8,7 +8,6 @@ import { PRIME_NUMBER } from '@/app/constants';
 import { getInitialValues } from './helpers';
 import type { MainSettersWithStep } from '@/app/interface';
 import Button from '../ui/button';
-import { ToastContainer } from 'react-toastify';
 
 export default function ServerSetup({
   t,
@@ -137,7 +136,6 @@ export default function ServerSetup({
       >
         <MdNavigateNext />
       </button>
-      <ToastContainer />
     </>
   );
 }
