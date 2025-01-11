@@ -18,6 +18,7 @@ export default function ServerSetup({
   setServers,
   setFirstStep,
 }: MainSettersWithStep) {
+  const [initialValuesServer, setInitialValuesServer] = useState<string>('');
   const [currentServer, setCurrentServer] = useState<string>('');
   const [initialValuesError, setInitialValuesError] = useState<string>('');
   const [getInitialValuesError, setGetInitialValuesError] =
@@ -42,7 +43,13 @@ export default function ServerSetup({
   };
 
   const handleGetInitialValues = () => {
-    getInitialValues(setT, setN, setServers, setGetInitialValuesError);
+    getInitialValues(
+      setT,
+      setN,
+      setServers,
+      initialValuesServer,
+      setGetInitialValuesError,
+    );
   };
 
   const handleClearData = () => {
@@ -56,13 +63,27 @@ export default function ServerSetup({
 
   return (
     <>
-      <div className='mt-8'>
-        <Button callback={handleGetInitialValues}>Get initial values</Button>
+      <form action={handleGetInitialValues} className='flex flex-col mt-12'>
+        <label htmlFor='initialValuesServer' className='text-lg'>
+          Enter server URL (e.g. http://localhost:5000) for downloading initial
+          values:
+        </label>
+        <input
+          type='text'
+          value={initialValuesServer}
+          name='initialValuesServer'
+          className='mb-4 bg-sky-300 rounded-xl px-4 py-2'
+          onChange={(e) => setInitialValuesServer(e.target.value)}
+        />
+        <Button>Get initial values</Button>
         {getInitialValuesError && (
           <p className='text-red-500'>{getInitialValuesError}</p>
         )}
-      </div>
-      <form action={sendInitialDataWithServers} className='flex flex-col mt-12'>
+      </form>
+      <form
+        action={sendInitialDataWithServers}
+        className='flex flex-col mt-12 mb-12'
+      >
         <label htmlFor='t' className='text-lg'>
           Enter t:
         </label>
@@ -85,7 +106,7 @@ export default function ServerSetup({
         />
         <div className='flex items-center justify-between'>
           <label htmlFor='currentServer' className='text-lg'>
-            Add server address:
+            Add server URL (e.g. http://localhost:5000)
           </label>
         </div>
         <div className='flex items-center justify-between mb-4 gap-4'>
@@ -93,14 +114,14 @@ export default function ServerSetup({
             type='text'
             value={currentServer}
             name='currentServer'
-            className='bg-sky-300 rounded-xl px-4 py-2'
+            className='bg-sky-300 rounded-xl px-4 py-2 flex-grow'
             onChange={(e) => setCurrentServer(e.target.value)}
           />
           <button
             type='button'
             disabled={servers.length >= n}
             onClick={handleAddServer}
-            className='rounded-full w-full h-full text-sky-300 disabled:text-gray-400 disabled:opacity-50'
+            className='rounded-full text-sky-300 disabled:text-gray-400 disabled:opacity-50 w-12 h-12'
           >
             <IoMdAddCircle className='rounded-full w-full h-full' />
           </button>

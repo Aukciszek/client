@@ -132,7 +132,7 @@ export default function SecondStep({
         </Button>
       )}
       {isSecretReconstructed && (
-        <ul className='flex flex-col gap-2'>
+        <ul className='flex flex-col gap-2 mb-12'>
           {reconstructedSecret.map(([server, secret]) => (
             <li
               key={server}

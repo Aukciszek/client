@@ -4,9 +4,10 @@ export const getInitialValues = async (
   setT: SetNumber,
   setN: SetNumber,
   setServers: SetStringArray,
+  initialValuesServer: string,
   setGetInitialValuesError: SetString,
 ): Promise<void> => {
-  await fetch('http://localhost:5000/api/initial-values').then(async (res) => {
+  await fetch(`${initialValuesServer}/api/initial-values`).then(async (res) => {
     const data = await res.json();
     if (!res.ok) {
       setGetInitialValuesError(data.detail);
