@@ -1,12 +1,14 @@
+import { toast } from 'react-toastify';
 import { PRIME_NUMBER } from '../app/constants';
 
 export const sendInitialData = async (
   servers: string[],
-  setInitialValuesError: React.Dispatch<React.SetStateAction<string>>,
   formData: FormData,
 ): Promise<void> => {
   const t = Number(formData.get('t'));
   const n = Number(formData.get('n'));
+  let messageSuccess: string = '';
+  let messageError: string = '';
 
   const promises = servers.map(
     (server, i) =>
@@ -27,12 +29,23 @@ export const sendInitialData = async (
         }).then(async (res) => {
           const data = await res.json();
           if (!res.ok) {
-            setInitialValuesError(data.detail);
+            messageError += `${server}: ${data.detail}\n`;
+            resolve(data);
+            return;
           }
+          messageSuccess += `${server}: ${data.result}\n`;
           resolve(data);
         });
       }),
   );
 
   await Promise.all(promises);
+
+  if (messageError !== '') {
+    toast.error(messageError);
+  }
+
+  if (messageSuccess !== '') {
+    toast.success(messageSuccess);
+  }
 };

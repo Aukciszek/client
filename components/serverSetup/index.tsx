@@ -8,6 +8,7 @@ import { PRIME_NUMBER } from '@/app/constants';
 import { getInitialValues } from './helpers';
 import type { MainSettersWithStep } from '@/app/interface';
 import Button from '../ui/button';
+import { ToastContainer } from 'react-toastify';
 
 export default function ServerSetup({
   t,
@@ -20,15 +21,8 @@ export default function ServerSetup({
 }: MainSettersWithStep) {
   const [initialValuesServer, setInitialValuesServer] = useState<string>('');
   const [currentServer, setCurrentServer] = useState<string>('');
-  const [initialValuesError, setInitialValuesError] = useState<string>('');
-  const [getInitialValuesError, setGetInitialValuesError] =
-    useState<string>('');
 
-  const sendInitialDataWithServers = sendInitialData.bind(
-    null,
-    servers,
-    setInitialValuesError,
-  );
+  const sendInitialDataWithServers = sendInitialData.bind(null, servers);
 
   const handleAddServer = () => {
     if (servers.length === n) {
@@ -43,13 +37,7 @@ export default function ServerSetup({
   };
 
   const handleGetInitialValues = () => {
-    getInitialValues(
-      setT,
-      setN,
-      setServers,
-      initialValuesServer,
-      setGetInitialValuesError,
-    );
+    getInitialValues(setT, setN, setServers, initialValuesServer);
   };
 
   const handleClearData = () => {
@@ -57,8 +45,6 @@ export default function ServerSetup({
     setN(0);
     setServers([]);
     setCurrentServer('');
-    setInitialValuesError('');
-    setGetInitialValuesError('');
   };
 
   return (
@@ -76,9 +62,6 @@ export default function ServerSetup({
           onChange={(e) => setInitialValuesServer(e.target.value)}
         />
         <Button>Get initial values</Button>
-        {getInitialValuesError && (
-          <p className='text-red-500'>{getInitialValuesError}</p>
-        )}
       </form>
       <form
         action={sendInitialDataWithServers}
@@ -128,9 +111,6 @@ export default function ServerSetup({
         </div>
         <Button>Submit</Button>
         <Button callback={handleClearData}>Clear data</Button>
-        {initialValuesError && (
-          <p className='text-red-500'>{initialValuesError}</p>
-        )}
         <div>
           <h2 className='mt-4'>Prime number (p): {PRIME_NUMBER}</h2>
           <h2>Servers:</h2>
@@ -157,6 +137,7 @@ export default function ServerSetup({
       >
         <MdNavigateNext />
       </button>
+      <ToastContainer />
     </>
   );
 }
