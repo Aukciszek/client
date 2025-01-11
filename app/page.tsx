@@ -4,6 +4,7 @@ import { useState } from 'react';
 import ServerSetup from '../components/serverSetup';
 import SecondStep from '../components/secondStep';
 import Navbar from '@/components/ui/navbar';
+import { ToastContainer } from 'react-toastify';
 
 export default function Home() {
   const [t, setT] = useState<number>(0);
@@ -36,6 +37,7 @@ export default function Home() {
           )}
         </div>
       </div>
+      <ToastContainer />
     </>
   );
 }
