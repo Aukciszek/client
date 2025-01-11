@@ -1,10 +1,10 @@
-'use server';
+'use client';
 
 export const reset = async (servers: string[]): Promise<void> => {
   const promises = servers.map(
     (server) =>
       new Promise((resolve) => {
-        fetch(`${server}/api/reset'`, {
+        fetch(`${server}/api/reset`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

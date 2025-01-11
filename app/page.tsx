@@ -15,7 +15,7 @@ export default function Home() {
     <>
       <Navbar servers={servers} />
       <div className='w-full h-full flex flex-col items-center justify-center'>
-        <div className='w-72'>
+        <div className='w-1/2'>
           {firstStep ? (
             <ServerSetup
               t={t}
