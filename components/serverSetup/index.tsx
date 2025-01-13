@@ -6,8 +6,9 @@ import { MdDelete, MdNavigateNext } from 'react-icons/md';
 import { sendInitialData } from '../actions';
 import { PRIME_NUMBER } from '@/app/constants';
 import { getInitialValues } from './helpers';
-import type { MainSettersWithStep } from '@/app/interface';
+import type { MainSettersWithStep, SetBoolean } from '@/app/interface';
 import Button from '../ui/button';
+import { toast } from 'react-toastify';
 
 export default function ServerSetup({
   t,
@@ -20,6 +21,10 @@ export default function ServerSetup({
 }: MainSettersWithStep) {
   const [initialValuesServer, setInitialValuesServer] = useState<string>('');
   const [currentServer, setCurrentServer] = useState<string>('');
+  const [
+    isInitialValuesServerInitialized,
+    setIsInitialValuesServerInitialized,
+  ] = useState<boolean>(false);
 
   const sendInitialDataWithServers = sendInitialData.bind(null, servers);
 
@@ -36,7 +41,13 @@ export default function ServerSetup({
   };
 
   const handleGetInitialValues = () => {
-    getInitialValues(setT, setN, setServers, initialValuesServer);
+    getInitialValues(
+      setT,
+      setN,
+      setServers,
+      setIsInitialValuesServerInitialized,
+      initialValuesServer,
+    );
   };
 
   const handleClearData = () => {
@@ -44,6 +55,59 @@ export default function ServerSetup({
     setN(0);
     setServers([]);
     setCurrentServer('');
+  };
+
+  const handleCheckInputs = (
+    t: number,
+    n: number,
+    servers: string[],
+    isInitialValuesServerInitialized: boolean,
+    setFirstStep: SetBoolean,
+  ) => {
+    const messageQSuccess: [string, string][] = [];
+    const messageQError: [string, string][] = [];
+
+    if (!isInitialValuesServerInitialized) {
+      messageQError.push([
+        'initialValuesServer',
+        'initialValuesServer should be initialized',
+      ]);
+    }
+    if (n == 0) {
+      messageQError.push(['n', 'n should be greater than 0']);
+    }
+    if (t > n) {
+      messageQError.push(['t > n', 't should not be greater than n']);
+    }
+    if (t == 0) {
+      messageQError.push(['t', 't should be greater than 0']);
+    }
+    if (servers.length == 0) {
+      messageQError.push(['servers', 'more than 0 should be added']);
+    }
+    if (messageQError.length !== 0) {
+      toast.error(
+        <div>
+          {messageQError.map(([title, message]) => (
+            <p key={title}>
+              <span className='font-bold'>{title}</span>: {message}
+            </p>
+          ))}
+        </div>,
+      );
+    } else {
+      messageQSuccess.push(['Success', 'All inputs are correct']);
+      toast.success(
+        <div>
+          {messageQSuccess.map(([title, message]) => (
+            <p key={title}>
+              <span className='font-bold'>{title}</span>: {message}
+            </p>
+          ))}
+        </div>,
+      );
+      setFirstStep(false);
+    }
   };
 
   return (
@@ -132,7 +196,15 @@ export default function ServerSetup({
       </form>
       <button
         type='button'
-        onClick={() => setFirstStep(false)}
+        onClick={() =>
+          handleCheckInputs(
+            t,
+            n,
+            servers,
+            isInitialValuesServerInitialized,
+            setFirstStep,
+          )
+        }
         className='fixed right-12 bottom-12 p-2 text-3xl bg-sky-950 text-slate-50 rounded-full'
       >
         <MdNavigateNext />
