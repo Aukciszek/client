@@ -62,30 +62,31 @@ export default function ServerSetup({
         />
         <Button>Get initial values</Button>
       </form>
-      <form
-        action={sendInitialDataWithServers}
-        className='flex flex-col mt-12 mb-12'
-      >
-        <label htmlFor='t' className='text-lg'>
-          Enter t:
-        </label>
-        <input
-          type='text'
-          value={t}
-          name='t'
-          className='mb-4 bg-sky-300 rounded-xl px-4 py-2'
-          onChange={(e) => setT(Number(e.target.value))}
-        />
-        <label htmlFor='n' className='text-lg'>
-          Enter n:
-        </label>
-        <input
-          type='text'
-          value={n}
-          name='n'
-          className='mb-4 bg-sky-300 rounded-xl px-4 py-2'
-          onChange={(e) => setN(Number(e.target.value))}
-        />
+      <form action={sendInitialDataWithServers} className='my-12'>
+        <div className='w-1/2 inline-flex flex-col pr-4'>
+          <label htmlFor='t' className='text-lg'>
+            Enter t:
+          </label>
+          <input
+            type='text'
+            value={t}
+            name='t'
+            className='mb-4 bg-sky-300 rounded-xl px-4 py-2'
+            onChange={(e) => setT(Number(e.target.value))}
+          />
+        </div>
+        <div className='w-1/2 inline-flex flex-col pl-4'>
+          <label htmlFor='n' className='text-lg'>
+            Enter n:
+          </label>
+          <input
+            type='text'
+            value={n}
+            name='n'
+            className='mb-4 bg-sky-300 rounded-xl px-4 py-2'
+            onChange={(e) => setN(Number(e.target.value))}
+          />
+        </div>
         <div className='flex items-center justify-between'>
           <label htmlFor='currentServer' className='text-lg'>
             Add server URL (e.g. http://localhost:5000)
