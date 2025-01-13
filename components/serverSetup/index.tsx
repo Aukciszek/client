@@ -5,10 +5,9 @@ import { IoMdAddCircle } from 'react-icons/io';
 import { MdDelete, MdNavigateNext } from 'react-icons/md';
 import { sendInitialData } from '../actions';
 import { PRIME_NUMBER } from '@/app/constants';
-import { checkInputs, getInitialValues } from './helpers';
-import type { MainSettersWithStep, SetBoolean } from '@/app/interface';
+import { getInitialValues } from './helpers';
+import type { MainSettersWithStep } from '@/app/interface';
 import Button from '../ui/button';
-import { toast } from 'react-toastify';
 
 export default function ServerSetup({
   t,
@@ -21,12 +20,13 @@ export default function ServerSetup({
 }: MainSettersWithStep) {
   const [initialValuesServer, setInitialValuesServer] = useState<string>('');
   const [currentServer, setCurrentServer] = useState<string>('');
-  const [
-    isInitialValuesServerInitialized,
-    setIsInitialValuesServerInitialized,
-  ] = useState<boolean>(false);
+  const [allowNextPageNavigation, setAllowNextPageNavigation] =
+    useState<boolean>(false);
 
-  const sendInitialDataWithServers = sendInitialData.bind(null, servers);
+  const sendInitialDataWithServers = () => {
+    sendInitialData.bind(null, servers);
+    //setAllowNextPageNavigation(true);
+  };
 
   const handleAddServer = () => {
     if (servers.length === n) {
@@ -45,7 +45,7 @@ export default function ServerSetup({
       setT,
       setN,
       setServers,
-      setIsInitialValuesServerInitialized,
+      setAllowNextPageNavigation,
       initialValuesServer,
     );
   };
@@ -55,10 +55,7 @@ export default function ServerSetup({
     setN(0);
     setServers([]);
     setCurrentServer('');
-  };
-
-  const handleCheckInputs = () => {
-    checkInputs(t, n, servers, isInitialValuesServerInitialized, setFirstStep);
+    setAllowNextPageNavigation(false);
   };
 
   return (
@@ -145,13 +142,15 @@ export default function ServerSetup({
           </ul>
         </div>
       </form>
-      <button
-        type='button'
-        onClick={handleCheckInputs}
-        className='fixed right-12 bottom-12 p-2 text-3xl bg-sky-950 text-slate-50 rounded-full'
-      >
-        <MdNavigateNext />
-      </button>
+      {allowNextPageNavigation && (
+        <button
+          type='button'
+          onClick={() => setFirstStep(false)}
+          className='fixed right-12 bottom-12 p-2 text-3xl bg-sky-950 text-slate-50 rounded-full'
+        >
+          <MdNavigateNext />
+        </button>
+      )}
     </>
   );
 }
