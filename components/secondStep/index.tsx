@@ -72,50 +72,59 @@ export default function SecondStep({
 
   return (
     <>
-      <div className='mt-8 flex flex-col'>
-        <label htmlFor='id' className='text-lg'>
-          Enter id:
-        </label>
-        <input
-          type='text'
-          value={id}
-          name='id'
-          className='mb-4 bg-sky-300 rounded-xl px-4 py-2'
-          onChange={(e) => setId(Number(e.target.value))}
-        />
-        <label htmlFor='secret' className='text-lg'>
-          Enter secret:
-        </label>
-        <input
-          type='text'
-          value={secret}
-          name='secret'
-          className='mb-4 bg-sky-300 rounded-xl px-4 py-2'
-          onChange={(e) => setSecret(Number(e.target.value))}
-        />
+      <div className='mt-8'>
+        <div className='w-1/2 inline-flex flex-col pr-4'>
+          <label htmlFor='id' className='text-lg'>
+            Enter id:
+          </label>
+          <input
+            type='text'
+            value={id}
+            name='id'
+            className='mb-4 bg-sky-300 rounded-xl px-4 py-2'
+            onChange={(e) => setId(Number(e.target.value))}
+          />
+        </div>
+        <div className='w-1/2 inline-flex flex-col pl-4'>
+          <label htmlFor='secret' className='text-lg'>
+            Enter secret:
+          </label>
+          <input
+            type='text'
+            value={secret}
+            name='secret'
+            className='mb-4 bg-sky-300 rounded-xl px-4 py-2'
+            onChange={(e) => setSecret(Number(e.target.value))}
+          />
+        </div>
+
         <Button callback={handleShamirClick}>Generate Shamir</Button>
       </div>
-      <div className='mt-8 flex flex-col'>
-        <label htmlFor='firstClientId' className='text-lg'>
-          Enter first client id for multiplication:
-        </label>
-        <input
-          type='text'
-          value={firstClientId}
-          name='firstClientId'
-          className='mb-4 bg-sky-300 rounded-xl px-4 py-2'
-          onChange={(e) => setFirstClientId(Number(e.target.value))}
-        />
-        <label htmlFor='secondClientId' className='text-lg'>
-          Enter second client id for multiplication:
-        </label>
-        <input
-          type='text'
-          value={secondClientId}
-          name='secondClientId'
-          className='mb-4 bg-sky-300 rounded-xl px-4 py-2'
-          onChange={(e) => setSecondClientId(Number(e.target.value))}
-        />
+      <div className='mt-8'>
+        <div className='w-1/2 inline-flex flex-col pr-4'>
+          <label htmlFor='firstClientId' className='text-lg'>
+            Enter first client id for multiplication:
+          </label>
+          <input
+            type='text'
+            value={firstClientId}
+            name='firstClientId'
+            className='mb-4 bg-sky-300 rounded-xl px-4 py-2'
+            onChange={(e) => setFirstClientId(Number(e.target.value))}
+          />
+        </div>
+        <div className='w-1/2 inline-flex flex-col pl-4'>
+          <label htmlFor='secondClientId' className='text-lg'>
+            Enter second client id for multiplication:
+          </label>
+          <input
+            type='text'
+            value={secondClientId}
+            name='secondClientId'
+            className='mb-4 bg-sky-300 rounded-xl px-4 py-2'
+            onChange={(e) => setSecondClientId(Number(e.target.value))}
+          />
+        </div>
         <Button callback={handleClearData}>Clear data</Button>
       </div>
       <Button callback={handleCalculateQAndRAndRedistributeClick}>
