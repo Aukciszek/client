@@ -5,7 +5,7 @@ export const getInitialValues = async (
   setT: SetNumber,
   setN: SetNumber,
   setServers: SetStringArray,
-  setAllowNextPageNavigation: SetBoolean,
+  setAllowNavigation: SetBoolean,
   initialValuesServer: string,
 ): Promise<void> => {
   await fetch(`${initialValuesServer}/api/initial-values`)
@@ -13,17 +13,17 @@ export const getInitialValues = async (
       const data = await res.json();
       if (!res.ok) {
         toast.error(data.detail);
-        setAllowNextPageNavigation(false);
+        setAllowNavigation(false);
       } else {
         setT(data.t);
         setN(data.n);
         setServers(data.parties);
         toast.success(data.result);
-        setAllowNextPageNavigation(true);
+        setAllowNavigation(true);
       }
     })
     .catch((err) => {
       toast.error(err.message);
-      setAllowNextPageNavigation(false);
+      setAllowNavigation(false);
     });
 };

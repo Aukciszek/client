@@ -13,20 +13,16 @@ export default function ServerSetup({
   t,
   setT,
   n,
+  allowNavigation,
   setN,
   servers,
+  setAllowNavigation,
   setServers,
   setFirstStep,
 }: MainSettersWithStep) {
   const [initialValuesServer, setInitialValuesServer] = useState<string>('');
   const [currentServer, setCurrentServer] = useState<string>('');
-  const [allowNextPageNavigation, setAllowNextPageNavigation] =
-    useState<boolean>(false);
-
-  const sendInitialDataWithServers = () => {
-    sendInitialData.bind(null, servers);
-    //setAllowNextPageNavigation(true);
-  };
+  const sendInitialDataWithServers = sendInitialData.bind(null, servers);
 
   const handleAddServer = () => {
     if (servers.length === n) {
@@ -45,7 +41,7 @@ export default function ServerSetup({
       setT,
       setN,
       setServers,
-      setAllowNextPageNavigation,
+      setAllowNavigation,
       initialValuesServer,
     );
   };
@@ -55,7 +51,7 @@ export default function ServerSetup({
     setN(0);
     setServers([]);
     setCurrentServer('');
-    setAllowNextPageNavigation(false);
+    setAllowNavigation(false);
   };
 
   return (
@@ -142,7 +138,7 @@ export default function ServerSetup({
           </ul>
         </div>
       </form>
-      {allowNextPageNavigation && (
+      {allowNavigation && (
         <button
           type='button'
           onClick={() => setFirstStep(false)}
