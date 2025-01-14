@@ -12,9 +12,11 @@ export interface MainProps {
 }
 
 export interface MainPropsWithSetters extends MainProps {
+  allowNavigation: boolean;
   setT: SetNumber;
   setN: SetNumber;
   setServers: SetStringArray;
+  setAllowNavigation: SetBoolean;
 }
 
 export interface MainSettersWithStep extends MainPropsWithSetters {

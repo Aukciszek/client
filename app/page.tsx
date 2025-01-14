@@ -11,6 +11,7 @@ export default function Home() {
   const [n, setN] = useState<number>(0);
   const [servers, setServers] = useState<string[]>([]);
   const [firstStep, setFirstStep] = useState<boolean>(true);
+  const [allowNavigation, setAllowNavigation] = useState<boolean>(false);
 
   return (
     <>
@@ -22,8 +23,10 @@ export default function Home() {
               t={t}
               setT={setT}
               n={n}
+              allowNavigation={allowNavigation}
               setN={setN}
               servers={servers}
+              setAllowNavigation={setAllowNavigation}
               setServers={setServers}
               setFirstStep={setFirstStep}
             />

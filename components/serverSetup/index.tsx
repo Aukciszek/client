@@ -13,15 +13,16 @@ export default function ServerSetup({
   t,
   setT,
   n,
+  allowNavigation,
   setN,
   servers,
+  setAllowNavigation,
   setServers,
   setFirstStep,
 }: MainSettersWithStep) {
   const [initialValuesServer, setInitialValuesServer] = useState<string>('');
   const [currentServer, setCurrentServer] = useState<string>('');
-
-  const sendInitialDataWithServers = sendInitialData.bind(null, servers);
+  const sendInitialDataWithServers = sendInitialData.bind(null, servers, setAllowNavigation);
 
   const handleAddServer = () => {
     if (servers.length === n) {
@@ -36,7 +37,13 @@ export default function ServerSetup({
   };
 
   const handleGetInitialValues = () => {
-    getInitialValues(setT, setN, setServers, initialValuesServer);
+    getInitialValues(
+      setT,
+      setN,
+      setServers,
+      setAllowNavigation,
+      initialValuesServer,
+    );
   };
 
   const handleClearData = () => {
@@ -44,6 +51,7 @@ export default function ServerSetup({
     setN(0);
     setServers([]);
     setCurrentServer('');
+    setAllowNavigation(false);
   };
 
   return (
@@ -130,13 +138,15 @@ export default function ServerSetup({
           </ul>
         </div>
       </form>
-      <button
-        type='button'
-        onClick={() => setFirstStep(false)}
-        className='fixed right-12 bottom-12 p-2 text-3xl bg-sky-950 text-slate-50 rounded-full'
-      >
-        <MdNavigateNext />
-      </button>
+      {allowNavigation && (
+        <button
+          type='button'
+          onClick={() => setFirstStep(false)}
+          className='fixed right-12 bottom-12 p-2 text-3xl bg-sky-950 text-slate-50 rounded-full'
+        >
+          <MdNavigateNext />
+        </button>
+      )}
     </>
   );
 }
