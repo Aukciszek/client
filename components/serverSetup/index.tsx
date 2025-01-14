@@ -13,13 +13,15 @@ export default function ServerSetup({
   t,
   setT,
   n,
-  setN,
+  initialValuesServer,
+  currentServer,
   servers,
+  setN,
   setServers,
+  setInitialValuesServer,
+  setCurrentServer,
   setFirstStep,
 }: MainSettersWithStep) {
-  const [initialValuesServer, setInitialValuesServer] = useState<string>('');
-  const [currentServer, setCurrentServer] = useState<string>('');
 
   const sendInitialDataWithServers = sendInitialData.bind(null, servers);
 

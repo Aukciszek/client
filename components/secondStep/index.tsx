@@ -1,7 +1,6 @@
 'use client';
 
 import type { MainPropsWithStep } from '@/app/interface';
-import { useState } from 'react';
 import {
   handleCalculateMultiplicativeShare,
   handleCalculateQAndRAndRedistribute,
@@ -14,24 +13,26 @@ import { MdNavigateBefore } from 'react-icons/md';
 export default function SecondStep({
   t,
   n,
+  id,
+  secret,
+  reconstructedSecret,
+  firstClientId,
+  secondClientId,
+  isRAndQCalculatedAndRedistributed,
+  isMultiplicativeShareCalculated,
+  isSecretReconstructed,
   servers,
+  setId,
+  setSecret,
+  setReconstructedSecret,
+  setFirstClientId,
+  setSecondClientId,
+  seItsRAndQCalculatedAndRedistributed,
+  setIsMultiplicativeShareCalculated,
+  setIsSecretReconstructed,
   setFirstStep,
 }: MainPropsWithStep) {
-  const [id, setId] = useState<number>(0);
-  const [secret, setSecret] = useState<number>(0);
-  const [reconstructedSecret, setReconstructedSecret] = useState<
-    [string, number][]
-  >([]);
-  const [firstClientId, setFirstClientId] = useState<number>(0);
-  const [secondClientId, setSecondClientId] = useState<number>(0);
-  const [
-    isRAndQCalculatedAndRedistributed,
-    seItsRAndQCalculatedAndRedistributed,
-  ] = useState<boolean>(false);
-  const [isMultiplicativeShareCalculated, setIsMultiplicativeShareCalculated] =
-    useState<boolean>(false);
-  const [isSecretReconstructed, setIsSecretReconstructed] =
-    useState<boolean>(false);
+  
 
   const handleShamirClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
