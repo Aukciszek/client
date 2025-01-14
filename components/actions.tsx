@@ -1,8 +1,10 @@
 import { toast } from 'react-toastify';
 import { PRIME_NUMBER } from '../app/constants';
+import { Dispatch, SetStateAction } from 'react';
 
 export const sendInitialData = async (
   servers: string[],
+  setAllowNavigation: Dispatch<SetStateAction<boolean>>,
   formData: FormData,
 ): Promise<void> => {
   const t = Number(formData.get('t'));
@@ -29,12 +31,15 @@ export const sendInitialData = async (
         const data = await res.json();
         if (!res.ok) {
           messageError.push([server, data.detail]);
+          setAllowNavigation(false);
           return;
         }
         messageSuccess.push([server, data.result]);
+        setAllowNavigation(true);
       })
       .catch((err) => {
         messageError.push([server, err.message]);
+        setAllowNavigation(false);
       }),
   );
 

@@ -22,7 +22,7 @@ export default function ServerSetup({
 }: MainSettersWithStep) {
   const [initialValuesServer, setInitialValuesServer] = useState<string>('');
   const [currentServer, setCurrentServer] = useState<string>('');
-  const sendInitialDataWithServers = sendInitialData.bind(null, servers);
+  const sendInitialDataWithServers = sendInitialData.bind(null, servers, setAllowNavigation);
 
   const handleAddServer = () => {
     if (servers.length === n) {

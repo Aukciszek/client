@@ -27,3 +27,7 @@ export const getInitialValues = async (
       setAllowNavigation(false);
     });
 };
+
+function setAllowNavigation(arg0: boolean) {
+  throw new Error('Function not implemented.');
+}
