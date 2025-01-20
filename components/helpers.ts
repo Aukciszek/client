@@ -111,13 +111,10 @@ export function shamir(
   n: number,
   k0: bigint,
 ): [Array<[number, bigint]>, bigint] {
-  //   let p = getRandomBits(2048);
-
-  //   while (!millerRabinPrimeTest(p, 64)) {
-  //     p = getRandomBits(2048);
-  //   }
 
   const p = BigInt(PRIME_NUMBER);
+  
+  // console.log("l pierwsza", millerRabinPrimeTest(p, 2048));
 
   const coefficients: bigint[] = Array.from({ length: t }, () =>
     getSecureRandomInt(BigInt(0), p),

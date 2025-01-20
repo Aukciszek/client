@@ -120,7 +120,7 @@ export default function ServerSetup({
         <Button>Submit</Button>
         <Button callback={handleClearData}>Clear data</Button>
         <div>
-          <h2 className='mt-4'>Prime number (p): {PRIME_NUMBER}</h2>
+          <h2 className='mt-4 break-all'>Prime number (p): {PRIME_NUMBER}</h2>
           <h2>Servers:</h2>
           <ul className='flex flex-col gap-2'>
             {servers.map((server) => (
