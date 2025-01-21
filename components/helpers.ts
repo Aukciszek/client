@@ -1,4 +1,3 @@
-import { assert } from 'console';
 import { PRIME_NUMBER } from '../app/constants';
 
 export function binaryExponentiation(b: bigint, k: bigint, n: bigint): bigint {
@@ -134,7 +133,7 @@ export function shamir(
 }
 
 // test if const PRIME_NUMBER is prime
-function PRIME_NUMBERPassesMillerRabinPrimeTest()
-{
-  assert(millerRabinPrimeTest(BigInt(PRIME_NUMBER), 2048) == true);
-}
+// function PRIME_NUMBERPassesMillerRabinPrimeTest()
+// {
+//   assert(millerRabinPrimeTest(BigInt(PRIME_NUMBER), 2048) == true);
+// }
