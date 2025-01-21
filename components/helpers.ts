@@ -1,3 +1,4 @@
+import { assert } from 'console';
 import { PRIME_NUMBER } from '../app/constants';
 
 export function binaryExponentiation(b: bigint, k: bigint, n: bigint): bigint {
@@ -113,8 +114,6 @@ export function shamir(
 ): [Array<[number, bigint]>, bigint] {
 
   const p = BigInt(PRIME_NUMBER);
-  
-  // console.log("l pierwsza", millerRabinPrimeTest(p, 2048));
 
   const coefficients: bigint[] = Array.from({ length: t }, () =>
     getSecureRandomInt(BigInt(0), p),
@@ -132,4 +131,10 @@ export function shamir(
   }
 
   return [shares, p];
+}
+
+// test if const PRIME_NUMBER is prime
+function PRIME_NUMBERPassesMillerRabinPrimeTest()
+{
+  assert(millerRabinPrimeTest(BigInt(PRIME_NUMBER), 2048) == true);
 }
