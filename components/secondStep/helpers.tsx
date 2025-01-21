@@ -22,7 +22,7 @@ export const handleShamir = async (
       },
       body: JSON.stringify({
         client_id: id,
-        share: Number(shares[i][1]),
+        share: shares[i][1].toString(),
       }),
     })
       .then(async (res) => {
