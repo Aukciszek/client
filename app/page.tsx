@@ -56,6 +56,7 @@ export default function Home() {
       <Navbar
         servers={servers}
         setFirstStep={setFirstStep}
+        setAllowNavigation={setAllowNavigation}
         handleClearDataFirstStep={handleClearDataFirstStep}
         handleClearDataSecondStep={handleClearDataSecondStep}
       />

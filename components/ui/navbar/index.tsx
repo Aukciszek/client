@@ -6,6 +6,7 @@ import type { NavbarProps } from './interface';
 export default function Navbar({
   servers,
   setFirstStep,
+  setAllowNavigation,
   handleClearDataFirstStep,
   handleClearDataSecondStep,
 }: NavbarProps) {
@@ -28,6 +29,7 @@ export default function Navbar({
                 hardReset(
                   servers,
                   setFirstStep,
+                  setAllowNavigation,
                   handleClearDataFirstStep,
                   handleClearDataSecondStep,
                 )

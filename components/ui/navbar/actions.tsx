@@ -1,5 +1,5 @@
 import { toast } from 'react-toastify';
-import { SetBoolean } from './interface';
+import type { SetBoolean } from './interface';
 
 export const reset = async (
   servers: string[],
@@ -61,6 +61,7 @@ export const reset = async (
 export const hardReset = async (
   servers: string[],
   setFirstStep: SetBoolean,
+  setAllowNavigation: SetBoolean,
   handleClearDataFirstStep: () => void,
   handleClearDataSecondStep: () => void,
 ): Promise<void> => {
@@ -83,6 +84,7 @@ export const hardReset = async (
         }
         messageSuccess.push([server, data.result]);
         handleClearDataFirstStep();
+        setAllowNavigation(false);
         handleClearDataSecondStep();
         setFirstStep(true);
       })
