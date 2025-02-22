@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { IoMdAddCircle } from 'react-icons/io';
 import { MdDelete, MdNavigateNext } from 'react-icons/md';
 import { sendInitialData } from '../actions';
@@ -11,17 +10,19 @@ import Button from '../ui/button';
 
 export default function ServerSetup({
   t,
-  setT,
   n,
-  allowNavigation,
-  setN,
   servers,
-  setAllowNavigation,
+  allowNavigation,
+  setT,
+  setN,
   setServers,
+  setAllowNavigation,
+  initialValuesServer,
+  currentServer,
+  setInitialValuesServer,
+  setCurrentServer,
   setFirstStep,
 }: MainSettersWithStep) {
-  const [initialValuesServer, setInitialValuesServer] = useState<string>('');
-  const [currentServer, setCurrentServer] = useState<string>('');
   const sendInitialDataWithServers = sendInitialData.bind(null, servers, setAllowNavigation);
 
   const handleAddServer = () => {

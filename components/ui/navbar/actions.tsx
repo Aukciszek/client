@@ -1,6 +1,10 @@
 import { toast } from 'react-toastify';
+import type { SetBoolean } from './interface';
 
-export const reset = async (servers: string[]): Promise<void> => {
+export const reset = async (
+  servers: string[],
+  handleClearDataSecondStep: () => void,
+): Promise<void> => {
   const messageSuccess: [string, string][] = [];
   const messageError: [string, string][] = [];
 
@@ -18,7 +22,9 @@ export const reset = async (servers: string[]): Promise<void> => {
           messageError.push([server, data.detail]);
           return;
         }
+
         messageSuccess.push([server, data.result]);
+        handleClearDataSecondStep();
       })
       .catch((err) => {
         messageError.push([server, err.message]);
@@ -52,7 +58,13 @@ export const reset = async (servers: string[]): Promise<void> => {
   }
 };
 
-export const hardReset = async (servers: string[]): Promise<void> => {
+export const hardReset = async (
+  servers: string[],
+  setFirstStep: SetBoolean,
+  setAllowNavigation: SetBoolean,
+  handleClearDataFirstStep: () => void,
+  handleClearDataSecondStep: () => void,
+): Promise<void> => {
   const messageSuccess: [string, string][] = [];
   const messageError: [string, string][] = [];
 
@@ -71,6 +83,10 @@ export const hardReset = async (servers: string[]): Promise<void> => {
           return;
         }
         messageSuccess.push([server, data.result]);
+        handleClearDataFirstStep();
+        setAllowNavigation(false);
+        handleClearDataSecondStep();
+        setFirstStep(true);
       })
       .catch((err) => {
         messageError.push([server, err.message]);
