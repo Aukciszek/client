@@ -22,12 +22,6 @@ export default function Home() {
   >([]);
   const [firstClientId, setFirstClientId] = useState<number>(0);
   const [secondClientId, setSecondClientId] = useState<number>(0);
-  const [
-    isRAndQCalculatedAndRedistributed,
-    seItsRAndQCalculatedAndRedistributed,
-  ] = useState<boolean>(false);
-  const [isMultiplicativeShareCalculated, setIsMultiplicativeShareCalculated] =
-    useState<boolean>(false);
   const [isSecretReconstructed, setIsSecretReconstructed] =
     useState<boolean>(false);
 
@@ -45,8 +39,6 @@ export default function Home() {
     setReconstructedSecret([]);
     setFirstClientId(0);
     setSecondClientId(0);
-    seItsRAndQCalculatedAndRedistributed(false);
-    setIsMultiplicativeShareCalculated(false);
     setIsSecretReconstructed(false);
   };
   const [allowNavigation, setAllowNavigation] = useState<boolean>(false);
@@ -87,10 +79,6 @@ export default function Home() {
               reconstructedSecret={reconstructedSecret}
               firstClientId={firstClientId}
               secondClientId={secondClientId}
-              isRAndQCalculatedAndRedistributed={
-                isRAndQCalculatedAndRedistributed
-              }
-              isMultiplicativeShareCalculated={isMultiplicativeShareCalculated}
               isSecretReconstructed={isSecretReconstructed}
               servers={servers}
               setId={setId}
@@ -98,12 +86,6 @@ export default function Home() {
               setReconstructedSecret={setReconstructedSecret}
               setFirstClientId={setFirstClientId}
               setSecondClientId={setSecondClientId}
-              seItsRAndQCalculatedAndRedistributed={
-                seItsRAndQCalculatedAndRedistributed
-              }
-              setIsMultiplicativeShareCalculated={
-                setIsMultiplicativeShareCalculated
-              }
               setIsSecretReconstructed={setIsSecretReconstructed}
               setFirstStep={setFirstStep}
             />

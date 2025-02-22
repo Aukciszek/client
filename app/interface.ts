@@ -34,8 +34,6 @@ export interface MainPropsWithStep extends MainProps {
   reconstructedSecret: [string, number][];
   firstClientId: number;
   secondClientId: number;
-  isRAndQCalculatedAndRedistributed: boolean;
-  isMultiplicativeShareCalculated: boolean;
   isSecretReconstructed: boolean;
   setFirstStep: SetBoolean;
   setId: SetNumber;
@@ -43,7 +41,5 @@ export interface MainPropsWithStep extends MainProps {
   setReconstructedSecret: SetStringNumberPairsArray;
   setFirstClientId: SetNumber;
   setSecondClientId: SetNumber;
-  seItsRAndQCalculatedAndRedistributed: SetBoolean;
-  setIsMultiplicativeShareCalculated: SetBoolean;
   setIsSecretReconstructed: SetBoolean;
 }

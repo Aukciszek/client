@@ -2,9 +2,7 @@
 
 import type { MainPropsWithStep } from '@/app/interface';
 import {
-  handleCalculateMultiplicativeShare,
-  handleCalculateQAndRAndRedistribute,
-  handleReconstructSecret,
+  handleMultiplication as handleMultiplication,
   handleShamir,
 } from './helpers';
 import Button from '../ui/button';
@@ -18,8 +16,6 @@ export default function SecondStep({
   reconstructedSecret,
   firstClientId,
   secondClientId,
-  isRAndQCalculatedAndRedistributed,
-  isMultiplicativeShareCalculated,
   isSecretReconstructed,
   servers,
   setId,
@@ -27,35 +23,21 @@ export default function SecondStep({
   setReconstructedSecret,
   setFirstClientId,
   setSecondClientId,
-  seItsRAndQCalculatedAndRedistributed,
-  setIsMultiplicativeShareCalculated,
   setIsSecretReconstructed,
   setFirstStep,
 }: MainPropsWithStep) {
-  
-
   const handleShamirClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
     await handleShamir(secret, id, t, n, servers);
   };
 
-  const handleCalculateQAndRAndRedistributeClick = async () => {
-    await handleCalculateQAndRAndRedistribute(
+  const handleMutiplicationClick = async () => {
+    const secrets = await handleMultiplication(
       firstClientId,
       secondClientId,
       servers,
     );
-    seItsRAndQCalculatedAndRedistributed(true);
-  };
-
-  const handleCalculateMultiplicativeShareClick = async () => {
-    await handleCalculateMultiplicativeShare(servers);
-    setIsMultiplicativeShareCalculated(true);
-  };
-
-  const handleReconstructSecretClick = async () => {
-    const secrets = await handleReconstructSecret(servers);
     setIsSecretReconstructed(true);
     setReconstructedSecret(secrets);
   };
@@ -66,8 +48,6 @@ export default function SecondStep({
     setReconstructedSecret([]);
     setFirstClientId(0);
     setSecondClientId(0);
-    seItsRAndQCalculatedAndRedistributed(false);
-    setIsMultiplicativeShareCalculated(false);
     setIsSecretReconstructed(false);
   };
 
@@ -128,19 +108,9 @@ export default function SecondStep({
         </div>
         <Button callback={handleClearData}>Clear data</Button>
       </div>
-      <Button callback={handleCalculateQAndRAndRedistributeClick}>
-        Calculate q and r and redistribute
+      <Button callback={handleMutiplicationClick}>
+        Reconstruct Secret
       </Button>
-      {isRAndQCalculatedAndRedistributed && (
-        <Button callback={handleCalculateMultiplicativeShareClick}>
-          Calculate Multiplicative Share
-        </Button>
-      )}
-      {isMultiplicativeShareCalculated && (
-        <Button callback={handleReconstructSecretClick}>
-          Reconstruct Secret
-        </Button>
-      )}
       {isSecretReconstructed && (
         <ul className='flex flex-col gap-2 mb-12'>
           {reconstructedSecret.map(([server, secret]) => (
