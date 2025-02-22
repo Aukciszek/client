@@ -63,11 +63,11 @@ export const handleShamir = async (
     );
 };
 
-export const handleCalculateQAndRAndRedistribute = async (
+export const handleMultiplication = async (
   firstClientId: number,
   secondClientId: number,
   servers: string[],
-): Promise<void> => {
+): Promise<[string, number][]> => {
   const messageQSuccess: [string, string][] = [];
   const messageQError: [string, string][] = [];
 
@@ -171,13 +171,9 @@ export const handleCalculateQAndRAndRedistribute = async (
       </div>,
     );
   }
-};
 
-export const handleCalculateMultiplicativeShare = async (
-  servers: string[],
-): Promise<void> => {
-  const messageSuccess: [string, string][] = [];
-  const messageError: [string, string][] = [];
+  const messageSuccessCalculateShare: [string, string][] = [];
+  const messageErrorCalculateShare: [string, string][] = [];
 
   const promises = servers.map((server) =>
     fetch(`${server}/api/calculate-multiplicative-share`, {
@@ -190,22 +186,22 @@ export const handleCalculateMultiplicativeShare = async (
       .then(async (res) => {
         const data = await res.json();
         if (!res.ok) {
-          messageError.push([server, data.detail]);
+          messageErrorCalculateShare.push([server, data.detail]);
           return;
         }
-        messageSuccess.push([server, data.result]);
+        messageSuccessCalculateShare.push([server, data.result]);
       })
       .catch((err) => {
-        messageError.push([server, err.message]);
+        messageErrorCalculateShare.push([server, err.message]);
       }),
   );
 
   await Promise.all(promises);
 
-  if (messageError.length !== 0) {
+  if (messageErrorCalculateShare.length !== 0) {
     toast.error(
       <div>
-        {messageError.map(([server, result]) => (
+        {messageErrorCalculateShare.map(([server, result]) => (
           <p key={server}>
             <span className='font-bold'>{server}</span>: {result}
           </p>
@@ -214,10 +210,10 @@ export const handleCalculateMultiplicativeShare = async (
     );
   }
 
-  if (messageSuccess.length !== 0) {
+  if (messageSuccessCalculateShare.length !== 0) {
     toast.success(
       <div>
-        {messageSuccess.map(([server, result]) => (
+        {messageSuccessCalculateShare.map(([server, result]) => (
           <p key={server}>
             <span className='font-bold'>{server}</span>: {result}
           </p>
@@ -225,15 +221,10 @@ export const handleCalculateMultiplicativeShare = async (
       </div>,
     );
   }
-};
-
-export const handleReconstructSecret = async (
-  servers: string[],
-): Promise<[string, number][]> => {
   const secrets: [string, number][] = [];
-  const messageError: [string, number][] = [];
+  const messageErrorReconstruct: [string, number][] = [];
 
-  const promises = servers.map((server) =>
+  const promisesReconstruct = servers.map((server) =>
     fetch(`${server}/api/reconstruct-secret`, {
       method: 'GET',
       headers: {
@@ -244,22 +235,22 @@ export const handleReconstructSecret = async (
       .then(async (res) => {
         const data = await res.json();
         if (!res.ok) {
-          messageError.push([server, data.detail]);
+          messageErrorReconstruct.push([server, data.detail]);
           return;
         }
         secrets.push([server, data.secret]);
       })
       .catch((err) => {
-        messageError.push([server, err.message]);
+        messageErrorReconstruct.push([server, err.message]);
       }),
   );
 
-  await Promise.all(promises);
+  await Promise.all(promisesReconstruct);
 
-  if (messageError.length !== 0) {
+  if (messageErrorReconstruct.length !== 0) {
     toast.error(
       <div>
-        {messageError.map(([server, result]) => (
+        {messageErrorReconstruct.map(([server, result]) => (
           <p key={server}>
             <span className='font-bold'>{server}</span>: {result}
           </p>
@@ -268,5 +259,5 @@ export const handleReconstructSecret = async (
     );
   }
 
-  return secrets;
+  return secrets
 };
