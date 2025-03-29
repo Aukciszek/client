@@ -1,3 +1,46 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@layer base {
+  main {
+    @apply flex-1;
+  }
+  p {
+    @apply leading-relaxed;
+  }
+  table {
+    @apply w-full flex flex-col items-stretch border border-primary-border rounded-xl;
+  }
+  thead {
+    @apply text-sm lg:text-lg;
+  }
+  tbody {
+    @apply max-h-96 overflow-y-auto;
+  }
+  th {
+    @apply p-2 sm:p-4;
+  }
+  tr {
+    @apply border-b border-primary-border last:border-b-0;
+  }
+  td {
+    @apply p-2 text-xs sm:p-4 xl:text-base;
+  }
+}
+
+@theme {
+  --font-default: 'Roboto';
+  --font-headline: 'Arvo';
+  --animate-fade-in: fadeIn 0.5s ease-in-out;
+  --color-primary: #faf9f6;
+  --color-primary-border: #e2e8f0;
+  --color-secondary: #f8fafc;
+
+  @keyframes fadeIn {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+}
