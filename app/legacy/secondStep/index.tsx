@@ -1,10 +1,7 @@
 'use client';
 
 import type { MainPropsWithStep } from '@/app/interface';
-import {
-  handleMultiplication as handleMultiplication,
-  handleShamir,
-} from './helpers';
+import { handleMultiplication, handleShamir } from './helpers';
 import Button from '../button';
 import { MdNavigateBefore } from 'react-icons/md';
 

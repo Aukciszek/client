@@ -29,6 +29,7 @@ export default function formField({
       )}
       <Input
         id={id}
+        name={id}
         type={type}
         placeholder={placeholder}
         value={value}

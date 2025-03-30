@@ -4,7 +4,9 @@ export type SetNumber = Dispatch<SetStateAction<number>>;
 export type SetString = Dispatch<SetStateAction<string>>;
 export type SetBoolean = Dispatch<SetStateAction<boolean>>;
 export type SetStringArray = Dispatch<SetStateAction<string[]>>;
-export type SetStringNumberPairsArray = Dispatch<SetStateAction<[string, number][]>>;
+export type SetStringNumberPairsArray = Dispatch<
+  SetStateAction<[string, number][]>
+>;
 
 export interface MainProps {
   t: number;
@@ -40,6 +42,7 @@ export interface MainPropsWithStep extends MainProps {
   setSecret: SetNumber;
   setReconstructedSecret: SetStringNumberPairsArray;
   setFirstClientId: SetNumber;
+
   setSecondClientId: SetNumber;
   setIsSecretReconstructed: SetBoolean;
 }
