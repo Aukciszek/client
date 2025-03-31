@@ -84,7 +84,6 @@ export default function AdminDashboard() {
           );
       }
       await Promise.all(tasks);
-      console.log("q calculated and shared for all parties");
 
       // Calculate and share r for each party
       const tasks2 = [];
@@ -96,15 +95,14 @@ export default function AdminDashboard() {
                       'Content-Type': 'application/json',
                   },
                   body: JSON.stringify({
-                      take_value_from_temporary_zZ: take_value_from_temporary_zZ,
-                      zZ_first_multiplication_factor: zZ_first_multiplication_factor,
-                      zZ_second_multiplication_factor: zZ_second_multiplication_factor,
+                      take_value_from_temporary_zZ,
+                      zZ_first_multiplication_factor,
+                      zZ_second_multiplication_factor,
                   }),
               })
           );
       }
       await Promise.all(tasks2);
-      console.log("r calculated and shared for all parties");
 
       // Calculate the multiplicative share for each party
       const tasks3 = [];
@@ -122,7 +120,6 @@ export default function AdminDashboard() {
           );
       }
       await Promise.all(tasks3);
-      console.log("Multiplicative shares calculated for all parties");
 
       // xor for all parties
       const tasks4 = [];
@@ -142,7 +139,6 @@ export default function AdminDashboard() {
           );
       }
       await Promise.all(tasks4);
-      console.log("xor calculated for all parties");
 
       // Reset the calculation for parties
       const tasks5 = [];
@@ -157,11 +153,7 @@ export default function AdminDashboard() {
           );
       }
       await Promise.all(tasks5);
-      console.log("Reset for all parties");
   }
-
-  
-
 
   const romb = async (serverAdresses: string[]) => {
     const messageCalculateRomb: [string, string][] = [];
@@ -170,9 +162,9 @@ export default function AdminDashboard() {
     let Rs = []
     let Multishares = []
 
-    serverAdresses.map((server) =>
+    const taskRomb1 = serverAdresses.map((server) =>
       fetch(`${server}/api/reset-calculation`, {
-        method: 'GET',
+        method: 'POST',
         headers: {
           'content-type': 'application/json',
           Accept: 'application/json',
@@ -189,10 +181,11 @@ export default function AdminDashboard() {
           errorCalculateRomb.push([server, err.message]);
         }),
     );
+    await Promise.all(taskRomb1);
 
-    serverAdresses.map((server) =>
+    const taskRomb2 = serverAdresses.map((server) =>
       fetch(`${server}/api/redistribute-q`, {
-        method: 'GET',
+        method: 'POST',
         headers: {
           'content-type': 'application/json',
           Accept: 'application/json',
@@ -210,8 +203,9 @@ export default function AdminDashboard() {
           errorCalculateRomb.push([server, err.message]);
         }),
     );
+    await Promise.all(taskRomb2);
 
-    serverAdresses.map((server) =>
+    const taskRomb3 = serverAdresses.map((server) =>
       fetch(`${server}/api/redistribute-r`, {
         method: 'POST',
         headers: {
@@ -236,8 +230,9 @@ export default function AdminDashboard() {
           errorCalculateRomb.push([server, err.message]);
         }),
     );
+    await Promise.all(taskRomb3);
 
-    serverAdresses.map((server) =>
+    const taskRomb4 = serverAdresses.map((server) =>
       fetch(`${server}/api/calculate-multiplicative-share`, {
         method: 'PUT',
         headers: {
@@ -261,10 +256,11 @@ export default function AdminDashboard() {
           errorCalculateRomb.push([server, err.message]);
         }),
     );
+    await Promise.all(taskRomb4);
 
-    serverAdresses.map((server) =>
+    const taskRomb5 = serverAdresses.map((server) =>
       fetch(`${server}/api/reset-calculation`, {
-        method: 'GET',
+        method: 'POST',
         headers: {
           'content-type': 'application/json',
           Accept: 'application/json',
@@ -281,6 +277,7 @@ export default function AdminDashboard() {
           errorCalculateRomb.push([server, err.message]);
         }),
     );
+    await Promise.all(taskRomb5);
 
     await xor(
       serverAdresses,
@@ -292,9 +289,9 @@ export default function AdminDashboard() {
     Qs = [];
     Rs = [];
 
-    serverAdresses.map((server) =>
+    const taskRomb6 = serverAdresses.map((server) =>
       fetch(`${server}/api/redistribute-q`, {
-        method: 'GET',
+        method: 'POST',
         headers: {
           'content-type': 'application/json',
           Accept: 'application/json',
@@ -312,8 +309,9 @@ export default function AdminDashboard() {
           errorCalculateRomb.push([server, err.message]);
         }),
     );
+    await Promise.all(taskRomb6);
 
-    serverAdresses.map((server) =>
+    const taskRomb7 = serverAdresses.map((server) =>
       fetch(`${server}/api/redistribute-r`, {
         method: 'POST',
         headers: {
@@ -338,10 +336,11 @@ export default function AdminDashboard() {
           errorCalculateRomb.push([server, err.message]);
         }),
     );
+    await Promise.all(taskRomb7);
 
     Multishares = [];
 
-    serverAdresses.map((server) =>
+    const taskRomb8 = serverAdresses.map((server) =>
       fetch(`${server}/api/calculate-multiplicative-share`, {
         method: 'PUT',
         headers: {
@@ -365,10 +364,11 @@ export default function AdminDashboard() {
           errorCalculateRomb.push([server, err.message]);
         }),
     );
+    await Promise.all(taskRomb8);
 
-    serverAdresses.map((server) =>
+    const taskRomb9 = serverAdresses.map((server) =>
       fetch(`${server}/api/reset-calculation`, {
-        method: 'GET',
+        method: 'POST',
         headers: {
           'content-type': 'application/json',
           Accept: 'application/json',
@@ -385,6 +385,7 @@ export default function AdminDashboard() {
           errorCalculateRomb.push([server, err.message]);
         }),
     );
+    await Promise.all(taskRomb9);
 
     await xor(
       serverAdresses,
@@ -392,9 +393,6 @@ export default function AdminDashboard() {
       [0, 1],
       [1],
     );
-
-
-    console.log("działa romb");
   };
 
   async function calculateFinalComparisonResult(parties, openedA, l, k) {
@@ -417,7 +415,6 @@ export default function AdminDashboard() {
         })
     );
     await Promise.all(resetTasks);
-    console.log("Reset for all parties");
   
     // Calculate and share q for each party
     const qTasks = parties.map((party) =>
@@ -438,7 +435,6 @@ export default function AdminDashboard() {
         })
     );
     await Promise.all(qTasks);
-    console.log("q calculated and shared for all parties");
   
     // Calculate and share r for each party
     const rTasks = parties.map((party) =>
@@ -465,7 +461,7 @@ export default function AdminDashboard() {
         })
     );
     await Promise.all(rTasks);
-    console.log("r calculated and shared for all parties");
+    console.log("opened a  ", openedA);
   
     // Calculate the multiplicative share for each party
     const multiplicativeShareTasks = parties.map((party) =>
@@ -489,7 +485,6 @@ export default function AdminDashboard() {
         })
     );
     await Promise.all(multiplicativeShareTasks);
-    console.log("Multiplicative shares calculated for all parties");
   
     // xor for all parties
     const comparisonResultTasks = parties.map((party) =>
@@ -515,10 +510,7 @@ export default function AdminDashboard() {
         })
     );
     await Promise.all(comparisonResultTasks);
-    console.log("działa liczenie");
   }
-
-
 
   const handleStartAuction = async () => {
 
@@ -526,6 +518,8 @@ export default function AdminDashboard() {
 
     console.log("początek");
 
+    const messageInitReset: [string, string][] = [];
+    const errorInitReset: [string, string][] = [];
     const messageCalculateAComparison: [string, string][] = [];
     const errorCalculateAComparison: [string, string][] = [];
     const messageCalculateSecret: [string, string][] = [];
@@ -539,6 +533,46 @@ export default function AdminDashboard() {
     const secrets: [string, number][] = [];
     const Zs = []
     const secrets_final: [string, number][] = [];
+
+    serverAdresses.map((server) =>
+      fetch(`${server}/api/reset-calculation`, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          Accept: 'application/json',
+        },
+      })
+        .then(async (res) => {
+          const data = await res.json();
+          if (!res.ok) {
+            messageInitReset.push([server, data.detail]);
+            return;
+          }
+        })
+        .catch((err) => {
+          errorInitReset.push([server, err.message]);
+        }),
+    );
+
+    serverAdresses.map((server) =>
+      fetch(`${server}/api/reset-comparison`, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          Accept: 'application/json',
+        },
+      })
+        .then(async (res) => {
+          const data = await res.json();
+          if (!res.ok) {
+            messageInitReset.push([server, data.detail]);
+            return;
+          }
+        })
+        .catch((err) => {
+          errorInitReset.push([server, err.message]);
+        }),
+    );
 
 
     const calculateAComparison = serverAdresses.map((server) =>
@@ -569,7 +603,6 @@ export default function AdminDashboard() {
     );
     
     await Promise.all(calculateAComparison);
-    console.log("działa calculateAComparison");
 
     const promisesReconstruct = serverAdresses.map((server) =>
           fetch(`${server}/api/reconstruct-secret`, {
@@ -593,7 +626,6 @@ export default function AdminDashboard() {
         );
       
     await Promise.all(promisesReconstruct);
-    console.log("działa promisesReconstruct");
 
     const calculateZ = serverAdresses.map((server) =>
           fetch(`${server}/api/calculate-z-comparison`, {
@@ -602,6 +634,11 @@ export default function AdminDashboard() {
               'content-type': 'application/json',
               Accept: 'application/json',
             },
+            body: JSON.stringify({
+              l: 1000,
+              k: 2,            
+              opened_a: secrets[0][1],
+            }),
           })
             .then(async (res) => {
               const data = await res.json();
@@ -617,8 +654,6 @@ export default function AdminDashboard() {
         );
       
     await Promise.all(calculateZ);
-    console.log(errorCalculateZs);
-    console.log("działa calculateZ");
 
     for (let i = 0; i < 3; i++) {
       await romb(serverAdresses);
@@ -645,12 +680,11 @@ export default function AdminDashboard() {
 
     }
 
-    await calculateFinalComparisonResult(serverAdresses, secrets, 1000, 2);
-    console.log("działa calculateFinalComparisonResult");
+    await calculateFinalComparisonResult(serverAdresses, secrets[0][1], 1000, 2);
 
     const recalculateFinalSecrets = serverAdresses.map((server) =>
           fetch(`${server}/api/reconstruct-secret`, {
-            method: 'POST',
+            method: 'GET',
             headers: {
               'content-type': 'application/json',
               Accept: 'application/json',
@@ -671,341 +705,11 @@ export default function AdminDashboard() {
         );
         
     await Promise.all(recalculateFinalSecrets);
-    console.log("działa recalculateFinalSecrets");
+    console.log("secrets_final", secrets_final);
+    console.log("koniec");
   };
-
-
       
 
-    //   const messageQSuccess: [string, string][] = [];
-    //   const messageQError: [string, string][] = [];
-    
-    //   const promises_q = servers.map((server) =>
-    //     fetch(`${server}/api/redistribute-q`, {
-    //       method: 'POST',
-    //       headers: {
-    //         'content-type': 'application/json',
-    //         Accept: 'application/json',
-    //       },
-    //     })
-    //       .then(async (res) => {
-    //         const data = await res.json();
-    //         if (!res.ok) {
-    //           messageQError.push([server, data.detail]);
-    //           return;
-    //         }
-    //         messageQSuccess.push([server, data.result]);
-    //       })
-    //       .catch((err) => {
-    //         messageQError.push([server, err.message]);
-    //       }),
-    //   );
-      
-      
-    //   await Promise.all(promises_q);
-
-    //   console.log("po promises q");
-      
-    //   const messageRSuccess: [string, string][] = [];
-    //   const messageRError: [string, string][] = [];
-    
-    //   const promises_r = servers.map((server) =>
-    //     fetch(`${server}/api/redistribute-r`, {
-    //       method: 'POST',
-    //       headers: {
-    //         'content-type': 'application/json',
-    //         Accept: 'application/json',
-    //       },
-    //       body: JSON.stringify({
-    //         first_client_id: firstClientId,
-    //         second_client_id: secondClientId,
-    //       }),
-    //     })
-    //       .then(async (res) => {
-    //         const data = await res.json();
-    //         if (!res.ok) {
-    //           messageRError.push([server, data.detail]);
-    //           return;
-    //         }
-    //         messageRSuccess.push([server, data.result]);
-    //       })
-    //       .catch((err) => {
-    //         messageQError.push([server, err.message]);
-    //       }),
-    //   );
-    
-    //   await Promise.all(promises_r);
-
-      
-    //   console.log("po promises r");
-        
-    //   const messageSuccessCalculateShare: [string, string][] = [];
-    //   const messageErrorCalculateShare: [string, string][] = [];
-    
-    //   const promises = servers.map((server) =>
-    //     fetch(`${server}/api/calculate-multiplicative-share`, {
-    //       method: 'PUT',
-    //       headers: {
-    //         'content-type': 'application/json',
-    //         Accept: 'application/json',
-    //       },
-    //     })
-    //       .then(async (res) => {
-    //         const data = await res.json();
-    //         if (!res.ok) {
-    //           messageErrorCalculateShare.push([server, data.detail]);
-    //           return;
-    //         }
-    //         messageSuccessCalculateShare.push([server, data.result]);
-    //       })
-    //       .catch((err) => {
-    //         messageErrorCalculateShare.push([server, err.message]);
-    //       }),
-    //   );
-    
-    //   await Promise.all(promises);
-
-      
-    //   console.log("po calculate-multiplicative-share");
-    
-    //   const secrets: [string, number][] = [];
-    //   const messageErrorReconstruct: [string, number][] = [];
-    
-    //   const promisesReconstruct = servers.map((server) =>
-    //     fetch(`${server}/api/reconstruct-secret`, {
-    //       method: 'GET',
-    //       headers: {
-    //         'content-type': 'application/json',
-    //         Accept: 'application/json',
-    //       },
-    //     })
-    //       .then(async (res) => {
-    //         const data = await res.json();
-    //         if (!res.ok) {
-    //           messageErrorReconstruct.push([server, data.detail]);
-    //           return;
-    //         }
-    //         secrets.push([server, data.secret]);
-    //       })
-    //       .catch((err) => {
-    //         messageErrorReconstruct.push([server, err.message]);
-    //       }),
-    //   );
-    
-    //   await Promise.all(promisesReconstruct);
-      
-    //   console.log("koniec");
-
-    //   console.log(secrets);
-    
-    //   return secrets;
-    // };
-
-    // console.log("zaczynamy");
-    // const secrets = handleMultiplication(21, 37, serverAdresses);
-    // console.log(secrets);
-
-
-/*
-   const handleMultiplication = async (
-    firstClientId: number,
-    secondClientId: number,
-    servers: string[],
-  ): Promise<[string, number][]> => {
-    const messageQSuccess: [string, string][] = [];
-    const messageQError: [string, string][] = [];
-  
-    const promises_q = servers.map((server) =>
-      fetch(`${server}/api/redistribute-q`, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          Accept: 'application/json',
-        },
-      })
-        .then(async (res) => {
-          const data = await res.json();
-          if (!res.ok) {
-            messageQError.push([server, data.detail]);
-            return;
-          }
-          messageQSuccess.push([server, data.result]);
-        })
-        .catch((err) => {
-          messageQError.push([server, err.message]);
-        }),
-    );
-  
-    await Promise.all(promises_q);
-  
-    if (messageQError.length !== 0) {
-      toast.error(
-        <div>
-          {messageQError.map(([server, result]) => (
-            <p key={server}>
-              <span className='font-bold'>{server}</span>: {result}
-            </p>
-          ))}
-        </div>,
-      );
-    }
-  
-    if (messageQSuccess.length !== 0) {
-      toast.success(
-        <div>
-          {messageQSuccess.map(([server, result]) => (
-            <p key={server}>
-              <span className='font-bold'>{server}</span>: {result}
-            </p>
-          ))}
-        </div>,
-      );
-    }
-  
-    const messageRSuccess: [string, string][] = [];
-    const messageRError: [string, string][] = [];
-  
-    const promises_r = servers.map((server) =>
-      fetch(`${server}/api/redistribute-r`, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          first_client_id: firstClientId,
-          second_client_id: secondClientId,
-        }),
-      })
-        .then(async (res) => {
-          const data = await res.json();
-          if (!res.ok) {
-            messageRError.push([server, data.detail]);
-            return;
-          }
-          messageRSuccess.push([server, data.result]);
-        })
-        .catch((err) => {
-          messageQError.push([server, err.message]);
-        }),
-    );
-  
-    await Promise.all(promises_r);
-  
-    if (messageRError.length !== 0) {
-      toast.error(
-        <div>
-          {messageRError.map(([server, result]) => (
-            <p key={server}>
-              <span className='font-bold'>{server}</span>: {result}
-            </p>
-          ))}
-        </div>,
-      );
-    }
-  
-    if (messageRSuccess.length !== 0) {
-      toast.success(
-        <div>
-          {messageRSuccess.map(([server, result]) => (
-            <p key={server}>
-              <span className='font-bold'>{server}</span>: {result}
-            </p>
-          ))}
-        </div>,
-      );
-    }
-  
-    const messageSuccessCalculateShare: [string, string][] = [];
-    const messageErrorCalculateShare: [string, string][] = [];
-  
-    const promises = servers.map((server) =>
-      fetch(`${server}/api/calculate-multiplicative-share`, {
-        method: 'PUT',
-        headers: {
-          'content-type': 'application/json',
-          Accept: 'application/json',
-        },
-      })
-        .then(async (res) => {
-          const data = await res.json();
-          if (!res.ok) {
-            messageErrorCalculateShare.push([server, data.detail]);
-            return;
-          }
-          messageSuccessCalculateShare.push([server, data.result]);
-        })
-        .catch((err) => {
-          messageErrorCalculateShare.push([server, err.message]);
-        }),
-    );
-  
-    await Promise.all(promises);
-  
-    if (messageErrorCalculateShare.length !== 0) {
-      toast.error(
-        <div>
-          {messageErrorCalculateShare.map(([server, result]) => (
-            <p key={server}>
-              <span className='font-bold'>{server}</span>: {result}
-            </p>
-          ))}
-        </div>,
-      );
-    }
-  
-    if (messageSuccessCalculateShare.length !== 0) {
-      toast.success(
-        <div>
-          {messageSuccessCalculateShare.map(([server, result]) => (
-            <p key={server}>
-              <span className='font-bold'>{server}</span>: {result}
-            </p>
-          ))}
-        </div>,
-      );
-    }
-    const secrets: [string, number][] = [];
-    const messageErrorReconstruct: [string, number][] = [];
-  
-    const promisesReconstruct = servers.map((server) =>
-      fetch(`${server}/api/reconstruct-secret`, {
-        method: 'GET',
-        headers: {
-          'content-type': 'application/json',
-          Accept: 'application/json',
-        },
-      })
-        .then(async (res) => {
-          const data = await res.json();
-          if (!res.ok) {
-            messageErrorReconstruct.push([server, data.detail]);
-            return;
-          }
-          secrets.push([server, data.secret]);
-        })
-        .catch((err) => {
-          messageErrorReconstruct.push([server, err.message]);
-        }),
-    );
-  
-    await Promise.all(promisesReconstruct);
-  
-    if (messageErrorReconstruct.length !== 0) {
-      toast.error(
-        <div>
-          {messageErrorReconstruct.map(([server, result]) => (
-            <p key={server}>
-              <span className='font-bold'>{server}</span>: {result}
-            </p>
-          ))}
-        </div>,
-      );
-    }
-  
-    return secrets;
-  };
-*/
   return (
     <>
       <Navbar isLogged />

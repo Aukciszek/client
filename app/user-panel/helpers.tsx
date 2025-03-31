@@ -74,6 +74,7 @@ export const handleShamir = async (
         messageError.push([server, err.message]);
       }),
   );
+  console.log('shares', shares);
 
   await Promise.all(promises);
 
