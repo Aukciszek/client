@@ -4,7 +4,9 @@ export type SetNumber = Dispatch<SetStateAction<number>>;
 export type SetString = Dispatch<SetStateAction<string>>;
 export type SetBoolean = Dispatch<SetStateAction<boolean>>;
 export type SetStringArray = Dispatch<SetStateAction<string[]>>;
-export type SetStringNumberPairsArray = Dispatch<SetStateAction<[string, number][]>>;
+export type SetStringNumberPairsArray = Dispatch<
+  SetStateAction<StringNumberPair[]>
+>;
 
 export interface MainProps {
   t: number;
@@ -31,7 +33,7 @@ export interface MainSettersWithStep extends MainPropsWithSetters {
 export interface MainPropsWithStep extends MainProps {
   id: number;
   secret: number;
-  reconstructedSecret: [string, number][];
+  reconstructedSecret: StringNumberPair[];
   firstClientId: number;
   secondClientId: number;
   isSecretReconstructed: boolean;
@@ -40,6 +42,23 @@ export interface MainPropsWithStep extends MainProps {
   setSecret: SetNumber;
   setReconstructedSecret: SetStringNumberPairsArray;
   setFirstClientId: SetNumber;
+
   setSecondClientId: SetNumber;
   setIsSecretReconstructed: SetBoolean;
+}
+
+export type StringPair = [string, string];
+
+export type NumberPair = [number, number];
+
+export type StringNumberPair = [string, number];
+
+export interface PromiseResult {
+  messageInfo: [string, string][];
+  errorInfo: [string, string][];
+}
+
+export interface PromiseResultNumbers {
+  messageInfo: NumberPair[];
+  errorInfo: StringPair[];
 }

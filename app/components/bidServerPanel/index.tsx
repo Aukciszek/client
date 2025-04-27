@@ -1,7 +1,6 @@
 'use client';
 
 import { IoMdAddCircleOutline, IoMdSend } from 'react-icons/io';
-import { MdOutlineInfo } from 'react-icons/md';
 import FormField from '../ui/formField';
 import Button from '../ui/button';
 import type { BidServerPanelProps } from './interface';
@@ -9,7 +8,6 @@ import type { BidServerPanelProps } from './interface';
 export default function BidServerPanel({
   headline,
   description,
-  connectedToMaster,
   isDisabled,
   onSubmit,
   isAdmin,
@@ -25,7 +23,7 @@ export default function BidServerPanel({
         {headline}
       </h2>
       <p className='text-sm md:text-base'>{description}</p>
-      <form className='flex flex-col gap-4 pt-6' onSubmit={onSubmit}>
+      <form className='flex flex-col gap-4 pt-6' action={onSubmit}>
         {isAdmin ? (
           initialValues ? (
             <>
@@ -106,12 +104,6 @@ export default function BidServerPanel({
           )}
         </Button>
       </form>
-      {!connectedToMaster && (
-        <div className='flex items-center gap-2 mt-4 px-4 py-2 text-xs rounded-xl bg-teal-100 lg:text-sm'>
-          <MdOutlineInfo className='h-4 w-4' />
-          You must connect to a server before submitting a bid
-        </div>
-      )}
     </div>
   );
 }

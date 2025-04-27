@@ -4,109 +4,70 @@ import { useState } from 'react';
 import Button from '../components/ui/button';
 import Footer from '../components/footer';
 import { LuServer } from 'react-icons/lu';
-import { IoMdRefresh } from 'react-icons/io';
+import { IoMdRefresh, IoMdSend } from 'react-icons/io';
 import Navbar from '../components/navbar';
 import FormField from '../components/ui/formField';
-import BidServerPanel from '../components/bidServerPanel';
-import { Server } from 'http';
 import ServerStatus from '../components/ui/serverStatus';
-
-interface ServerInfo {
-  id: string;
-  name: string;
-  address: string;
-  status: 'online' | 'offline';
-  lastSynced: string;
-}
+import { getServerAddresses } from '../globalHelpers';
+import type { Server } from '../globalInterface';
+import { MdOutlineInfo } from 'react-icons/md';
+import { getInitialValues, handleShamir } from './helpers';
+import { toast } from 'react-toastify';
 
 export default function ClientDashboard() {
   const [masterServerAddress, setMasterServerAddress] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
-  const [error, setError] = useState('');
   const [connectedToMaster, setConnectedToMaster] = useState(false);
-  const [servers, setServers] = useState<ServerInfo[]>([]);
+  const [servers, setServers] = useState<Server[]>([]);
   const [id, setId] = useState('');
   const [bidAmount, setBidAmount] = useState('');
+  const [t, setT] = useState<number>(0);
+  const [n, setN] = useState<number>(0);
 
   const connectToMasterServer = async () => {
-    if (!masterServerAddress) {
-      setError('Please enter a master server address');
-      return;
-    }
-
     setIsConnecting(true);
-    setError('');
 
-    try {
-      //get server list
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+    await getInitialValues(setT, setN, setServers, masterServerAddress);
 
-      const mockServers: ServerInfo[] = [
-        {
-          id: '1',
-          name: 'Primary Auction Server',
-          address: 'https://auction-server-1.example.com',
-          status: 'online',
-          lastSynced: new Date().toISOString(),
-        },
-        {
-          id: '2',
-          name: 'Secondary Auction Server',
-          address: 'https://auction-server-2.example.com',
-          status: 'online',
-          lastSynced: new Date().toISOString(),
-        },
-        {
-          id: '3',
-          name: 'Backup Server',
-          address: 'https://auction-backup.example.com',
-          status: 'offline',
-          lastSynced: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-        },
-      ];
-
-      setServers(mockServers);
-      setConnectedToMaster(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setIsConnecting(false);
-    }
+    setConnectedToMaster(true);
+    setIsConnecting(false);
   };
 
   const refreshServerList = async () => {
     if (!connectedToMaster) return;
 
-    try {
-      // Refresh server list
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      setServers(
-        servers.map((server) => ({
-          ...server,
-          lastSynced: new Date().toISOString(),
-        })),
-      );
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    }
+    setServers(
+      servers.map((server) => ({
+        ...server,
+        lastSynced: new Date().toISOString(),
+      })),
+    );
   };
 
-  const handleBidSubmit = () => {
-    if (!id || !bidAmount) {
-      setError('Please enter both an ID and bid amount');
-      return;
-    }
+  const handleBidSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
 
     if (
       isNaN(Number.parseFloat(bidAmount)) ||
       Number.parseFloat(bidAmount) <= 0
     ) {
-      setError('Bid amount must be a positive number');
+      toast.error('Bid amount must be a positive number', {
+        autoClose: false,
+        closeOnClick: true,
+        draggable: true,
+      });
       return;
     }
 
-    setError('');
+    await handleShamir(
+      Number(bidAmount),
+      Number(id),
+      t,
+      n,
+      getServerAddresses(servers),
+    );
 
     setTimeout(() => {
       setId('');
@@ -140,7 +101,9 @@ export default function ClientDashboard() {
                 <Button
                   variant='default'
                   onClick={connectToMasterServer}
-                  disabled={isConnecting || connectedToMaster}
+                  disabled={
+                    isConnecting || connectedToMaster || !masterServerAddress
+                  }
                   style='flex items-center gap-2'
                 >
                   <LuServer className='h-4 w-4' />
@@ -170,7 +133,7 @@ export default function ClientDashboard() {
                     <tbody>
                       {servers.map((server) => (
                         <tr key={server.id} className='flex items-center'>
-                          <td className='basis-1/2'>{server.name}</td>
+                          <td className='basis-1/2'>{server.address}</td>
                           <td className='basis-1/2'>
                             <ServerStatus status={server.status} />
                           </td>
@@ -182,17 +145,46 @@ export default function ClientDashboard() {
               )}
             </div>
           </div>
-          <BidServerPanel
-            headline='Submit Bid'
-            description='Enter your ID and amount to participate in the auction'
-            firstValue={id}
-            setFirstValue={setId}
-            secondValue={bidAmount}
-            setSecondValue={setBidAmount}
-            connectedToMaster={connectedToMaster}
-            onSubmit={handleBidSubmit}
-            isDisabled={!connectedToMaster || !id || !bidAmount}
-          />
+          <div className='w-full bg-secondary border border-primary-border p-6 rounded-xl shadow-sm lg:basis-1/2 lg:w-auto'>
+            <h2 className='text-xl font-bold tracking-wide font-headline lg:text-2xl'>
+              Submit Bid
+            </h2>
+            <p className='text-sm md:text-base'>
+              Enter your ID and amount to participate in the auction
+            </p>
+            <div className='flex flex-col gap-4 pt-6'>
+              <FormField
+                id='id'
+                text='ID'
+                value={id}
+                setValue={setId}
+                placeholder='Enter your ID'
+                type='text'
+              />
+              <FormField
+                id='bidAmount'
+                text='Bid Amount'
+                value={bidAmount}
+                setValue={setBidAmount}
+                placeholder='Enter your bid amount'
+                type='number'
+              />
+              <Button
+                variant='default'
+                disabled={!connectedToMaster || !id || !bidAmount}
+                style='flex justify-center items-center gap-2'
+                onClick={handleBidSubmit}
+              >
+                Submit Bid <IoMdSend className='h-4 w-4' />
+              </Button>
+            </div>
+            {!connectedToMaster && (
+              <div className='flex items-center gap-2 mt-4 px-4 py-2 text-xs rounded-xl bg-teal-100 lg:text-sm'>
+                <MdOutlineInfo className='h-4 w-4' />
+                You must connect to a server before submitting a bid
+              </div>
+            )}
+          </div>
         </div>
       </main>
       <Footer />

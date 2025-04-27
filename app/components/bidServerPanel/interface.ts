@@ -1,12 +1,11 @@
-import type { Dispatch, FormEvent, SetStateAction } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 
 export interface BidServerPanelProps {
   headline: string;
   description: string;
-  connectedToMaster?: boolean;
   isDisabled?: boolean;
   // eslint-disable-next-line no-unused-vars
-  onSubmit: (() => void) | ((e: FormEvent) => void);
+  onSubmit: string | ((formData: FormData) => void | Promise<void>) | undefined;
   isAdmin?: boolean;
   firstValue: string;
   secondValue: string;

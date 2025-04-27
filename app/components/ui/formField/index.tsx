@@ -29,11 +29,12 @@ export default function formField({
       )}
       <Input
         id={id}
+        name={id}
         type={type}
         placeholder={placeholder}
         value={value}
         onChange={(e: ChangeEvent<HTMLInputElement>) =>
-          setValue(e.target.value)
+          setValue(e.target.value.trim())
         }
         required
       />
