@@ -1,18 +1,32 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Button from '../components/ui/button';
 import Footer from '../components/footer';
 import Navbar from '../components/navbar';
 import BidServerPanel from '../components/bidServerPanel';
-import {
-  MdGavel,
-  MdOutlineDelete,
-  MdRestore,
-} from 'react-icons/md';
+import { MdGavel, MdOutlineDelete, MdRestore } from 'react-icons/md';
 import type { Server } from './interface';
-import { getRandomString, hardReset,  sendInitialData } from './helpers';
+import {
+  calculateAComparison,
+  calculateFinalComparisonResult,
+  calculateZ,
+  getBiddersIds,
+  getRandomString,
+  handleBiddersIdsToast,
+  handleToast,
+  handleWinnerToast,
+  hardReset,
+  popZ,
+  promisesReconstruct,
+  recalculateFinalSecrets,
+  resetCalculation,
+  resetComparison,
+  sendInitialData,
+} from './helpers';
 import { getServerAddresses } from '../globalHelpers';
+import { toast } from 'react-toastify';
+import type { PromiseResult } from '../interface';
 
 export default function AdminDashboard() {
   const [servers, setServers] = useState<Server[]>([]);
@@ -32,6 +46,11 @@ export default function AdminDashboard() {
         status: 'online',
       },
     ]);
+    toast.success('Server added successfully!', {
+      autoClose: 5000,
+      closeOnClick: true,
+      draggable: true,
+    });
     setServerName('');
     setServerAddress('');
   };
@@ -43,672 +62,101 @@ export default function AdminDashboard() {
 
   const handleRemoveServer = (id: string) => {
     setServers(servers.filter((server) => server.id !== id));
+    toast.success('Server removed successfully!', {
+      autoClose: 5000,
+      closeOnClick: true,
+      draggable: true,
+    });
   };
 
-  
-  const handleClearDataFirstStep = () => {
-    // setT(0);
-    // setN(0);
-    // setServers([]);
-    // setInitialValuesServer('');
-    // setCurrentServer('');
+  const handleClearData = () => {
+    setT('0');
+    setN('0');
+    setServers([]);
   };
-
-  const handleClearDataSecondStep = () => {
-    // setId(0);
-    // setSecret(0);
-    // setReconstructedSecret([]);
-    // setFirstClientId(0);
-    // setSecondClientId(0);
-    // setIsSecretReconstructed(false);
-  };
-
-
-  const xor = async(
-      parties,
-      take_value_from_temporary_zZ,
-      zZ_first_multiplication_factor,
-      zZ_second_multiplication_factor,
-  ) => {
-      const tasks = [];
-
-      // Calculate and share q for each party
-      for (const party of parties) {
-          tasks.push(
-              fetch(`${party}/api/redistribute-q`, {
-                  method: 'POST',
-                  headers: {
-                      'Content-Type': 'application/json',
-                  },
-              })
-          );
-      }
-      await Promise.all(tasks);
-
-      // Calculate and share r for each party
-      const tasks2 = [];
-      for (const party of parties) {
-          tasks2.push(
-              fetch(`${party}/api/redistribute-r`, {
-                  method: 'POST',
-                  headers: {
-                      'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                      take_value_from_temporary_zZ,
-                      zZ_first_multiplication_factor,
-                      zZ_second_multiplication_factor,
-                  }),
-              })
-          );
-      }
-      await Promise.all(tasks2);
-
-      // Calculate the multiplicative share for each party
-      const tasks3 = [];
-      for (const party of parties) {
-          tasks3.push(
-              fetch(`${party}/api/calculate-multiplicative-share`, {
-                  method: 'PUT',
-                  headers: {
-                      'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                      calculate_for_xor: true,
-                  }),
-              })
-          );
-      }
-      await Promise.all(tasks3);
-
-      // xor for all parties
-      const tasks4 = [];
-      for (const party of parties) {
-          tasks4.push(
-              fetch(`${party}/api/xor`, {
-                  method: 'POST',
-                  headers: {
-                      'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                      take_value_from_temporary_zZ: take_value_from_temporary_zZ,
-                      zZ_first_multiplication_factor: zZ_first_multiplication_factor,
-                      zZ_second_multiplication_factor: zZ_second_multiplication_factor,
-                  }),
-              })
-          );
-      }
-      await Promise.all(tasks4);
-
-      // Reset the calculation for parties
-      const tasks5 = [];
-      for (const party of parties) {
-          tasks5.push(
-              fetch(`${party}/api/reset-calculation`, {
-                  method: 'POST',
-                  headers: {
-                      'Content-Type': 'application/json',
-                  },
-              })
-          );
-      }
-      await Promise.all(tasks5);
-  }
-
-  const romb = async (serverAdresses: string[]) => {
-    const messageCalculateRomb: [string, string][] = [];
-    const errorCalculateRomb: [string, string][] = [];
-    let Qs = []
-    let Rs = []
-    let Multishares = []
-
-    const taskRomb1 = serverAdresses.map((server) =>
-      fetch(`${server}/api/reset-calculation`, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          Accept: 'application/json',
-        },
-      })
-        .then(async (res) => {
-          const data = await res.json();
-          if (!res.ok) {
-            messageCalculateRomb.push([server, data.detail]);
-            return;
-          }
-        })
-        .catch((err) => {
-          errorCalculateRomb.push([server, err.message]);
-        }),
-    );
-    await Promise.all(taskRomb1);
-
-    const taskRomb2 = serverAdresses.map((server) =>
-      fetch(`${server}/api/redistribute-q`, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          Accept: 'application/json',
-        },
-      })
-        .then(async (res) => {
-          const data = await res.json();
-          if (!res.ok) {
-            messageCalculateRomb.push([server, data.detail]);
-            return;
-          }
-          Qs.push([server, data.secret]);
-        })
-        .catch((err) => {
-          errorCalculateRomb.push([server, err.message]);
-        }),
-    );
-    await Promise.all(taskRomb2);
-
-    const taskRomb3 = serverAdresses.map((server) =>
-      fetch(`${server}/api/redistribute-r`, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          take_value_from_temporary_zZ: false,
-          zZ_first_multiplication_factor: [0, 0],
-          zZ_second_multiplication_factor: [1, 0],
-        }),
-      })
-        .then(async (res) => {
-          const data = await res.json();
-          if (!res.ok) {
-            messageCalculateRomb.push([server, data.detail]);
-            return;
-          }
-          Rs.push([server, data.secret]);
-        })
-        .catch((err) => {
-          errorCalculateRomb.push([server, err.message]);
-        }),
-    );
-    await Promise.all(taskRomb3);
-
-    const taskRomb4 = serverAdresses.map((server) =>
-      fetch(`${server}/api/calculate-multiplicative-share`, {
-        method: 'PUT',
-        headers: {
-          'content-type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          set_in_temporary_zZ_index: 0,
-          calculate_for_xor: false,
-        }),
-      })
-        .then(async (res) => {
-          const data = await res.json();
-          if (!res.ok) {
-            messageCalculateRomb.push([server, data.detail]);
-            return;
-          }
-          Multishares.push([server, data.secret]);
-        })
-        .catch((err) => {
-          errorCalculateRomb.push([server, err.message]);
-        }),
-    );
-    await Promise.all(taskRomb4);
-
-    const taskRomb5 = serverAdresses.map((server) =>
-      fetch(`${server}/api/reset-calculation`, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          Accept: 'application/json',
-        },
-      })
-        .then(async (res) => {
-          const data = await res.json();
-          if (!res.ok) {
-            messageCalculateRomb.push([server, data.detail]);
-            return;
-          }
-        })
-        .catch((err) => {
-          errorCalculateRomb.push([server, err.message]);
-        }),
-    );
-    await Promise.all(taskRomb5);
-
-    await xor(
-      serverAdresses,
-      false,
-      [0, 0],
-      [1, 1],
-    );
-
-    Qs = [];
-    Rs = [];
-
-    const taskRomb6 = serverAdresses.map((server) =>
-      fetch(`${server}/api/redistribute-q`, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          Accept: 'application/json',
-        },
-      })
-        .then(async (res) => {
-          const data = await res.json();
-          if (!res.ok) {
-            messageCalculateRomb.push([server, data.detail]);
-            return;
-          }
-          Qs.push([server, data.secret]);
-        })
-        .catch((err) => {
-          errorCalculateRomb.push([server, err.message]);
-        }),
-    );
-    await Promise.all(taskRomb6);
-
-    const taskRomb7 = serverAdresses.map((server) =>
-      fetch(`${server}/api/redistribute-r`, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          take_value_from_temporary_zZ: false,
-          zZ_first_multiplication_factor: [0, 0],
-          zZ_second_multiplication_factor: [1, 0],
-        }),
-      })
-        .then(async (res) => {
-          const data = await res.json();
-          if (!res.ok) {
-            messageCalculateRomb.push([server, data.detail]);
-            return;
-          }
-          Rs.push([server, data.secret]);
-        })
-        .catch((err) => {
-          errorCalculateRomb.push([server, err.message]);
-        }),
-    );
-    await Promise.all(taskRomb7);
-
-    Multishares = [];
-
-    const taskRomb8 = serverAdresses.map((server) =>
-      fetch(`${server}/api/calculate-multiplicative-share`, {
-        method: 'PUT',
-        headers: {
-          'content-type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          set_in_temporary_zZ_index: 0,
-          calculate_for_xor: false,
-        }),
-      })
-        .then(async (res) => {
-          const data = await res.json();
-          if (!res.ok) {
-            messageCalculateRomb.push([server, data.detail]);
-            return;
-          }
-          Multishares.push([server, data.secret]);
-        })
-        .catch((err) => {
-          errorCalculateRomb.push([server, err.message]);
-        }),
-    );
-    await Promise.all(taskRomb8);
-
-    const taskRomb9 = serverAdresses.map((server) =>
-      fetch(`${server}/api/reset-calculation`, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          Accept: 'application/json',
-        },
-      })
-        .then(async (res) => {
-          const data = await res.json();
-          if (!res.ok) {
-            messageCalculateRomb.push([server, data.detail]);
-            return;
-          }
-        })
-        .catch((err) => {
-          errorCalculateRomb.push([server, err.message]);
-        }),
-    );
-    await Promise.all(taskRomb9);
-
-    await xor(
-      serverAdresses,
-      true,
-      [0, 1],
-      [1],
-    );
-  };
-
-  async function calculateFinalComparisonResult(parties, openedA, l, k) {
-    // Reset the calculation for parties
-    const resetTasks = parties.map((party) =>
-      fetch(`${party}/api/reset-calculation`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-        .then(async (res) => {
-          if (!res.ok) {
-            const data = await res.json();
-            console.error(`Error resetting ${party}: ${data.detail}`);
-          }
-        })
-        .catch((err) => {
-          console.error(`Error resetting ${party}: ${err.message}`);
-        })
-    );
-    await Promise.all(resetTasks);
-  
-    // Calculate and share q for each party
-    const qTasks = parties.map((party) =>
-      fetch(`${party}/api/redistribute-q`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-        .then(async (res) => {
-          if (!res.ok) {
-            const data = await res.json();
-            console.error(`Error redistributing q for ${party}: ${data.detail}`);
-          }
-        })
-        .catch((err) => {
-          console.error(`Error redistributing q for ${party}: ${err.message}`);
-        })
-    );
-    await Promise.all(qTasks);
-  
-    // Calculate and share r for each party
-    const rTasks = parties.map((party) =>
-      fetch(`${party}/api/redistribute-r`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          calculate_final_comparison_result: true,
-          opened_a: openedA,
-          l: l,
-          k: k,
-        }),
-      })
-        .then(async (res) => {
-          if (!res.ok) {
-            const data = await res.json();
-            console.error(`Error redistributing r for ${party}: ${data.detail}`);
-          }
-        })
-        .catch((err) => {
-          console.error(`Error redistributing r for ${party}: ${err.message}`);
-        })
-    );
-    await Promise.all(rTasks);
-    console.log("opened a  ", openedA);
-  
-    // Calculate the multiplicative share for each party
-    const multiplicativeShareTasks = parties.map((party) =>
-      fetch(`${party}/api/calculate-multiplicative-share`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          calculate_for_xor: true,
-        }),
-      })
-        .then(async (res) => {
-          if (!res.ok) {
-            const data = await res.json();
-            console.error(`Error calculating multiplicative share for ${party}: ${data.detail}`);
-          }
-        })
-        .catch((err) => {
-          console.error(`Error calculating multiplicative share for ${party}: ${err.message}`);
-        })
-    );
-    await Promise.all(multiplicativeShareTasks);
-  
-    // xor for all parties
-    const comparisonResultTasks = parties.map((party) =>
-      fetch(`${party}/api/calculate-comparison-result`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          opened_a: openedA,
-          l: l,
-          k: k,
-        }),
-      })
-        .then(async (res) => {
-          if (!res.ok) {
-            const data = await res.json();
-            console.error(`Error calculating comparison result for ${party}: ${data.detail}`);
-          }
-        })
-        .catch((err) => {
-          console.error(`Error calculating comparison result for ${party}: ${err.message}`);
-        })
-    );
-    await Promise.all(comparisonResultTasks);
-  }
 
   const handleStartAuction = async () => {
+    const serverAddresses = getServerAddresses(servers);
 
-    const serverAdresses = getServerAddresses(servers);
+    toast.loading('Starting the auction!');
 
-    console.log("początek");
+    const resetCalculationInfo: PromiseResult =
+      await resetCalculation(serverAddresses);
 
-    const messageInitReset: [string, string][] = [];
-    const errorInitReset: [string, string][] = [];
-    const messageCalculateAComparison: [string, string][] = [];
-    const errorCalculateAComparison: [string, string][] = [];
-    const messageCalculateSecret: [string, string][] = [];
-    const errorCalculateSecret: [string, string][] = [];
-    const messageCalculateZs: [string, string][] = [];
-    const errorCalculateZs: [string, string][] = [];
-    const messageRecalculateAComparison: [string, string][] = [];
-    const errorRecalculateAComparison: [string, string][] = [];
-    const messagePopZ: [string, string][] = [];
-    const errorPopZ: [string, string][] = [];
-    const secrets: [string, number][] = [];
-    const Zs = []
-    const secrets_final: [string, number][] = [];
+    toast.dismiss();
 
-    serverAdresses.map((server) =>
-      fetch(`${server}/api/reset-calculation`, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          Accept: 'application/json',
-        },
-      })
-        .then(async (res) => {
-          const data = await res.json();
-          if (!res.ok) {
-            messageInitReset.push([server, data.detail]);
-            return;
-          }
-        })
-        .catch((err) => {
-          errorInitReset.push([server, err.message]);
-        }),
+    handleToast(
+      resetCalculationInfo,
+      'Reset calculation success!',
+      'Reset calculation failed!',
     );
 
-    serverAdresses.map((server) =>
-      fetch(`${server}/api/reset-comparison`, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          Accept: 'application/json',
-        },
-      })
-        .then(async (res) => {
-          const data = await res.json();
-          if (!res.ok) {
-            messageInitReset.push([server, data.detail]);
-            return;
-          }
-        })
-        .catch((err) => {
-          errorInitReset.push([server, err.message]);
-        }),
+    const resetComparisonInfo = await resetComparison(serverAddresses);
+
+    handleToast(
+      resetComparisonInfo,
+      'Reset comparison success!',
+      'Reset comparison failed!',
     );
 
+    const biddersIdsInfo = await getBiddersIds(serverAddresses);
 
-    const calculateAComparison = serverAdresses.map((server) =>
-      fetch(`${server}/api/calculate-a-comparison`, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          l: 1000,
-          k: 2,            
-          first_client_id: 21,
-          second_client_id: 37,
-        }),
-      })
-        .then(async (res) => {
-          const data = await res.json();
-          if (!res.ok) {
-            errorCalculateAComparison.push([server, data.detail]);
-            return;
-          }
-          messageCalculateAComparison.push([server, data.result]);
-        })
-        .catch((err) => {
-          errorCalculateAComparison.push([server, err.message]);
-        }),
+    handleBiddersIdsToast(
+      biddersIdsInfo,
+      'Successfully retrieved bidder IDs!',
+      'Failed to retrieve bidder IDs!',
     );
-    
-    await Promise.all(calculateAComparison);
 
-    const promisesReconstruct = serverAdresses.map((server) =>
-          fetch(`${server}/api/reconstruct-secret`, {
-            method: 'GET',
-            headers: {
-              'content-type': 'application/json',
-              Accept: 'application/json',
-            },
-          })
-            .then(async (res) => {
-              const data = await res.json();
-              if (!res.ok) {
-                messageCalculateSecret.push([server, data.detail]);
-                return;
-              }
-              secrets.push([server, data.secret]);
-            })
-            .catch((err) => {
-              errorCalculateSecret.push([server, err.message]);
-            }),
-        );
-      
-    await Promise.all(promisesReconstruct);
+    if (typeof biddersIdsInfo === 'string') return;
 
-    const calculateZ = serverAdresses.map((server) =>
-          fetch(`${server}/api/calculate-z-comparison`, {
-            method: 'POST',
-            headers: {
-              'content-type': 'application/json',
-              Accept: 'application/json',
-            },
-            body: JSON.stringify({
-              l: 1000,
-              k: 2,            
-              opened_a: secrets[0][1],
-            }),
-          })
-            .then(async (res) => {
-              const data = await res.json();
-              if (!res.ok) {
-                messageCalculateZs.push([server, data.detail]);
-                return;
-              }
-              Zs.push([server, data.secret]);
-            })
-            .catch((err) => {
-              errorCalculateZs.push([server, err.message]);
-            }),
-        );
-      
-    await Promise.all(calculateZ);
+    const calculateAComparisonInfo = await calculateAComparison(
+      serverAddresses,
+      biddersIdsInfo,
+    );
 
-    for (let i = 0; i < 3; i++) {
-      await romb(serverAdresses);
+    handleToast(
+      calculateAComparisonInfo,
+      'Calculate A comparison success!',
+      'Calculate A comparison failed!',
+    );
 
-      serverAdresses.map((server) =>
-        fetch(`${server}/api/pop-zZ`, {
-          method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-            Accept: 'application/json',
-          },
-        })
-          .then(async (res) => {
-            const data = await res.json();
-            if (!res.ok) {
-              errorPopZ.push([server, data.detail]);
-              return;
-            }
-            messagePopZ.push([server, data.result]);
-          })
-          .catch((err) => {
-            errorPopZ.push([server, err.message]);
-          }));
+    const promisesReconstructInfo = await promisesReconstruct(serverAddresses);
 
-    }
+    handleToast(
+      promisesReconstructInfo,
+      'Reconstruct secrets success!',
+      'Reconstruct secrets failed!',
+    );
 
-    await calculateFinalComparisonResult(serverAdresses, secrets[0][1], 1000, 2);
+    const calculateZInfo = await calculateZ(
+      serverAddresses,
+      promisesReconstructInfo.secrets[0][1],
+    );
 
-    const recalculateFinalSecrets = serverAdresses.map((server) =>
-          fetch(`${server}/api/reconstruct-secret`, {
-            method: 'GET',
-            headers: {
-              'content-type': 'application/json',
-              Accept: 'application/json',
-            },
-          })
-            .then(async (res) => {
-              const data = await res.json();
-              if (!res.ok) {
-                errorRecalculateAComparison.push([server, data.detail]);
-                return;
-              }
-              messageRecalculateAComparison.push([server, data.result]);
-              secrets_final.push([server, data.secret]);
-            })
-            .catch((err) => {
-              errorRecalculateAComparison.push([server, err.message]);
-            }),
-        );
-        
-    await Promise.all(recalculateFinalSecrets);
-    console.log("secrets_final", secrets_final);
-    console.log("koniec");
+    handleToast(calculateZInfo, 'Calculate Z success!', 'Calculate Z failed!');
+
+    const popZInfo = await popZ(serverAddresses);
+
+    handleToast(popZInfo, 'Pop Z success!', 'Pop Z failed!');
+
+    await calculateFinalComparisonResult(
+      serverAddresses,
+      promisesReconstructInfo.secrets[0][1],
+    );
+
+    const recalculateFinalSecretsInfo =
+      await recalculateFinalSecrets(serverAddresses);
+
+    handleToast(
+      recalculateFinalSecretsInfo,
+      'Recalculate final secrets success!',
+      'Recalculate final secrets failed!',
+    );
+
+    const firstResult = recalculateFinalSecretsInfo.finalSecrets[0][1];
+
+    handleWinnerToast(recalculateFinalSecretsInfo, firstResult);
   };
-      
 
   return (
     <>
@@ -724,10 +172,10 @@ export default function AdminDashboard() {
               secondValue={serverAddress}
               setSecondValue={setServerAddress}
               onSubmit={handleAddServer}
-              isDisabled={!serverName && !serverAddress}
+              isDisabled={!serverName || !serverAddress}
               isAdmin
             />
-             <BidServerPanel
+            <BidServerPanel
               headline='Set initial values'
               description='Set the initial values for the auction'
               firstValue={t}
@@ -735,7 +183,7 @@ export default function AdminDashboard() {
               secondValue={n}
               setSecondValue={setN}
               onSubmit={sendInitialDataWithServers}
-              isDisabled={!t && !n}
+              isDisabled={!t || !n}
               initialValues
               isAdmin
             />
@@ -763,14 +211,10 @@ export default function AdminDashboard() {
                       style='w-full flex gap-2 justify-center items-center'
                       variant='outline'
                       onClick={() =>
-                        hardReset(
-                          getServerAddresses(servers),
-                          handleClearDataFirstStep,
-                          handleClearDataSecondStep,
-                        )
+                        hardReset(getServerAddresses(servers), handleClearData)
                       }
                     >
-                      Factory reset
+                      Reset servers
                       <MdRestore className='h-4 w-4' />
                     </Button>
                   </li>
@@ -801,7 +245,7 @@ export default function AdminDashboard() {
                           <td className='basis-3/10 sm:basis-2/10'>
                             {server.name}
                           </td>
-                          <td className='basis-3/10 sm:basis-5/10'>
+                          <td className='basis-3/10 text-center sm:basis-5/10'>
                             {server.address}
                           </td>
                           <td className='basis-2/10 sm:basis-2/10'>
@@ -835,4 +279,5 @@ export default function AdminDashboard() {
       </main>
       <Footer />
     </>
-  )};
+  );
+}

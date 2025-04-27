@@ -12,32 +12,20 @@ import { getServerAddresses } from '../globalHelpers';
 import type { Server } from '../globalInterface';
 import { MdOutlineInfo } from 'react-icons/md';
 import { getInitialValues, handleShamir } from './helpers';
-import { handleMultiplication } from '../legacy/secondStep/helpers';
+import { toast } from 'react-toastify';
 
 export default function ClientDashboard() {
   const [masterServerAddress, setMasterServerAddress] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
-  const [error, setError] = useState('');
   const [connectedToMaster, setConnectedToMaster] = useState(false);
   const [servers, setServers] = useState<Server[]>([]);
   const [id, setId] = useState('');
   const [bidAmount, setBidAmount] = useState('');
   const [t, setT] = useState<number>(0);
   const [n, setN] = useState<number>(0);
-  const [reconstructedSecret, setReconstructedSecret] = useState<
-    [string, number][]
-  >([]);
-  const [isSecretReconstructed, setIsSecretReconstructed] =
-    useState<boolean>(false);
 
   const connectToMasterServer = async () => {
-    if (!masterServerAddress) {
-      setError('Please enter a master server address');
-      return;
-    }
-
     setIsConnecting(true);
-    setError('');
 
     await getInitialValues(setT, setN, setServers, masterServerAddress);
 
@@ -48,46 +36,30 @@ export default function ClientDashboard() {
   const refreshServerList = async () => {
     if (!connectedToMaster) return;
 
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      setServers(
-        servers.map((server) => ({
-          ...server,
-          lastSynced: new Date().toISOString(),
-        })),
-      );
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    }
-  };
-
-  const handleMutiplicationClick = async () => {
-    const secrets = await handleMultiplication(
-      Number(id),
-      9999,
-      getServerAddresses(servers),
+    setServers(
+      servers.map((server) => ({
+        ...server,
+        lastSynced: new Date().toISOString(),
+      })),
     );
-    setIsSecretReconstructed(true);
-    setReconstructedSecret(secrets);
   };
 
   const handleBidSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    if (!id || !bidAmount) {
-      setError('Please enter both an ID and bid amount');
-      return;
-    }
 
     if (
       isNaN(Number.parseFloat(bidAmount)) ||
       Number.parseFloat(bidAmount) <= 0
     ) {
-      setError('Bid amount must be a positive number');
+      toast.error('Bid amount must be a positive number', {
+        autoClose: false,
+        closeOnClick: true,
+        draggable: true,
+      });
       return;
     }
-
-    setError('');
 
     await handleShamir(
       Number(bidAmount),
@@ -129,7 +101,9 @@ export default function ClientDashboard() {
                 <Button
                   variant='default'
                   onClick={connectToMasterServer}
-                  disabled={isConnecting || connectedToMaster}
+                  disabled={
+                    isConnecting || connectedToMaster || !masterServerAddress
+                  }
                   style='flex items-center gap-2'
                 >
                   <LuServer className='h-4 w-4' />
@@ -209,21 +183,6 @@ export default function ClientDashboard() {
                 <MdOutlineInfo className='h-4 w-4' />
                 You must connect to a server before submitting a bid
               </div>
-            )}
-            <Button onClick={handleMutiplicationClick} variant={'ghost'}>
-              Reconstruct Secret
-            </Button>
-            {isSecretReconstructed && (
-              <ul className='flex flex-col gap-2 mb-12'>
-                {reconstructedSecret.map(([server, secret]) => (
-                  <li
-                    key={server}
-                    className='flex justify-between items-center px-2 py-1 rounded-xl bg-sky-300 transition-all animate-fade-in'
-                  >
-                    {server}: {secret}
-                  </li>
-                ))}
-              </ul>
             )}
           </div>
         </div>

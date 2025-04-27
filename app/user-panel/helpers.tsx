@@ -3,6 +3,7 @@ import { toast } from 'react-toastify';
 import type { Dispatch, SetStateAction } from 'react';
 import { PRIME_NUMBER } from '../constants';
 import type { Server } from '../globalInterface';
+import { areAllValuesTheSame } from '../admin-dashboard/helpers';
 
 export const getInitialValues = async (
   setT: SetNumber,
@@ -10,6 +11,8 @@ export const getInitialValues = async (
   setServers: Dispatch<SetStateAction<Server[]>>,
   initialValuesServer: string,
 ): Promise<void> => {
+  const messageInfo: string[] = [];
+  const errorInfo: string[] = [];
   await fetch(`${initialValuesServer}/api/initial-values`)
     .then(async (res) => {
       const data = await res.json();
@@ -20,7 +23,6 @@ export const getInitialValues = async (
         setN(data.n);
         const servers = data.parties.map((party: string) => {
           return {
-            // Change id, name, address
             id: party,
             name: party,
             address: party,
@@ -28,12 +30,27 @@ export const getInitialValues = async (
           };
         });
         setServers(servers);
-        toast.success(data.result);
+
+        messageInfo.push(data.result);
       }
     })
     .catch((err) => {
-      toast.error(err.message);
+      errorInfo.push(err.message);
     });
+
+  if (errorInfo.length !== 0 && areAllTheSame(errorInfo)) {
+    toast.error(
+      <div>Something went wrong while retrieving server addresses</div>,
+    );
+    return;
+  }
+
+  if (messageInfo.length !== 0 && areAllTheSame(messageInfo)) {
+    toast.success(<div>Successfully retrieved server addresses</div>);
+    return;
+  }
+
+  toast.error(<div>Something went wrong while submitting bid</div>);
 };
 
 export const handleShamir = async (
@@ -45,60 +62,47 @@ export const handleShamir = async (
 ): Promise<void> => {
   const shares = shamir(t, n, BigInt(secret))[0];
 
-  console.log('shares', shares);
+  const messageInfo: [string, string][] = [];
+  const errorInfo: [string, string][] = [];
 
-  const messageSuccess: [string, string][] = [];
-  const messageError: [string, string][] = [];
-
-  const promises = servers.map((server, i) =>
-    fetch(`${server}/api/set-shares`, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify({
-        client_id: id,
-        share: shares[i][1].toString(),
-      }),
-    })
-      .then(async (res) => {
-        const data = await res.json();
-        if (!res.ok) {
-          messageError.push([server, data.detail]);
-          return;
-        }
-        messageSuccess.push([server, data.result]);
+  await Promise.all(
+    servers.map((server, i) =>
+      fetch(`${server}/api/set-shares`, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          client_id: id,
+          share: shares[i][1].toString(),
+        }),
       })
-      .catch((err) => {
-        messageError.push([server, err.message]);
-      }),
+        .then(async (res) => {
+          const data = await res.json();
+          if (!res.ok) {
+            errorInfo.push([server, data.detail]);
+            return;
+          }
+          messageInfo.push([server, data.result]);
+        })
+        .catch((err) => {
+          errorInfo.push([server, err.message]);
+        }),
+    ),
   );
-  console.log('shares', shares);
 
-  await Promise.all(promises);
+  if (errorInfo.length !== 0 && areAllValuesTheSame(errorInfo)) {
+    toast.error(<div>Something went wrong while submitting bid</div>);
+    return;
+  }
 
-  if (messageError.length !== 0)
-    toast.error(
-      <div>
-        {messageError.map(([server, result]) => (
-          <p key={server}>
-            <span className='font-bold'>{server}</span>: {result}
-          </p>
-        ))}
-      </div>,
-    );
+  if (messageInfo.length !== 0 && areAllValuesTheSame(messageInfo)) {
+    toast.success(<div>Successfully submitted bid</div>);
+    return;
+  }
 
-  if (messageSuccess.length !== 0)
-    toast.success(
-      <div>
-        {messageSuccess.map(([server, result]) => (
-          <p key={server}>
-            <span className='font-bold'>{server}</span>: {result}
-          </p>
-        ))}
-      </div>,
-    );
+  toast.error(<div>Something went wrong while submitting bid</div>);
 };
 
 export function shamir(
@@ -375,4 +379,15 @@ export const handleMultiplication = async (
   }
 
   return secrets;
+};
+
+export const areAllTheSame = (arr: string[]): boolean => {
+  if (arr.length === 0) return true;
+  const firstValue = arr[0];
+  return arr.every((value) => {
+    if (value !== firstValue) {
+      return false;
+    }
+    return true;
+  });
 };
