@@ -379,7 +379,7 @@ export const promisesReconstruct = async (
 
 export const calculateZ = async (
   servers: string[],
-  secrets: number,
+  openedA: number,
 ): Promise<PromiseResult> => {
   const messageInfo: StringPair[] = [];
   const errorInfo: StringPair[] = [];
@@ -393,7 +393,7 @@ export const calculateZ = async (
           Accept: 'application/json',
         },
         body: JSON.stringify({
-          opened_a: '0x' + secrets.toString(16),
+          opened_a: openedA,
           l: l,
           k: k,
         }),
@@ -612,6 +612,7 @@ export async function calculateFinalComparisonResult(
       }),
   );
   await Promise.all(resetTasks);
+  console.log(openedA);
 
   // Calculate and share q for each party
   const qTasks = parties.map((party) =>
@@ -644,7 +645,7 @@ export async function calculateFinalComparisonResult(
       },
       body: JSON.stringify({
         calculate_final_comparison_result: true,
-        opened_a: '0x' + openedA.toString(16),
+        opened_a: openedA,
         l: l,
         k: k,
       }),
@@ -698,7 +699,7 @@ export async function calculateFinalComparisonResult(
         Accept: 'application/json',
       },
       body: JSON.stringify({
-        opened_a: '0x' + openedA.toString(16),
+        opened_a: openedA,
         l: l,
         k: k,
       }),
@@ -1022,7 +1023,7 @@ export const handleWinnerToast = (
 
   if (allResultsMatch) {
     toast.success(
-      `Auction completed successfully! ${firstResult === 0 ? 'First client won!' : 'Second client won!'}`,
+      `Auction completed successfully! ${firstResult === 1 ? 'First client won!' : 'Second client won!'}`,
       {
         autoClose: false,
         closeOnClick: true,

@@ -75,7 +75,7 @@ export const handleShamir = async (
         },
         body: JSON.stringify({
           client_id: id,
-          share: shares[i][1].toString(),
+          share: shares[i][1].toString(16),
         }),
       })
         .then(async (res) => {
@@ -129,6 +129,7 @@ export function shamir(
   for (let i = 1; i <= n; i++) {
     shares.push([i, f(i, coefficients, p, t)]);
   }
+  console.log('p: ', p);
 
   return [shares, p];
 }
