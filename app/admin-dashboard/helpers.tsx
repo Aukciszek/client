@@ -9,7 +9,6 @@ import type {
   StringPair,
   PromiseResult,
   NumberPair,
-  PromiseResultNumbers,
 } from '../interface';
 
 export const sendInitialData = async (
@@ -251,7 +250,7 @@ export const resetCalculation = async (
       fetch(`${server}/api/reset-calculation`, {
         method: 'POST',
         headers: {
-          'content-type': 'application/json',
+          'Content-Type': 'application/json',
           Accept: 'application/json',
         },
       })
@@ -283,7 +282,7 @@ export const resetComparison = async (
       fetch(`${server}/api/reset-comparison`, {
         method: 'POST',
         headers: {
-          'content-type': 'application/json',
+          'Content-Type': 'application/json',
           Accept: 'application/json',
         },
       })
@@ -316,12 +315,13 @@ export const calculateAComparison = async (
       fetch(`${server}/api/calculate-a-comparison`, {
         method: 'POST',
         headers: {
-          'content-type': 'application/json',
+          'Content-Type': 'application/json',
           Accept: 'application/json',
         },
         body: JSON.stringify({
-          l: l,
-          k: k,
+          // l and k are not directly used by the backend logic for this specific calculation
+          // according to the provided python code's calculate_a_comparison function.
+          // They are part of the AComparisonData model but seem relevant later.
           first_client_id: biddersIds[0],
           second_client_id: biddersIds[1],
         }),
@@ -355,7 +355,7 @@ export const promisesReconstruct = async (
       fetch(`${server}/api/reconstruct-secret`, {
         method: 'GET',
         headers: {
-          'content-type': 'application/json',
+          'Content-Type': 'application/json',
           Accept: 'application/json',
         },
       })
@@ -389,13 +389,13 @@ export const calculateZ = async (
       fetch(`${server}/api/calculate-z-comparison`, {
         method: 'POST',
         headers: {
-          'content-type': 'application/json',
+          'Content-Type': 'application/json',
           Accept: 'application/json',
         },
         body: JSON.stringify({
+          opened_a: '0x' + secrets.toString(16),
           l: l,
           k: k,
-          opened_a: secrets.toString(16),
         }),
       })
         .then(async (res) => {
@@ -419,7 +419,7 @@ export const popZ = async (servers: string[]): Promise<PromiseResult> => {
   const messageInfo: StringPair[] = [];
   const errorInfo: StringPair[] = [];
 
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < l; i++) {
     await romb(servers);
 
     await Promise.all(
@@ -427,7 +427,7 @@ export const popZ = async (servers: string[]): Promise<PromiseResult> => {
         fetch(`${server}/api/pop-zZ`, {
           method: 'POST',
           headers: {
-            'content-type': 'application/json',
+            'Content-Type': 'application/json',
             Accept: 'application/json',
           },
         })
@@ -461,7 +461,7 @@ export const recalculateFinalSecrets = async (
       fetch(`${server}/api/reconstruct-secret`, {
         method: 'GET',
         headers: {
-          'content-type': 'application/json',
+          'Content-Type': 'application/json',
           Accept: 'application/json',
         },
       })
@@ -498,6 +498,7 @@ export const xor = async (
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Accept: 'application/json',
         },
       }),
     );
@@ -512,12 +513,18 @@ export const xor = async (
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Accept: 'application/json',
         },
         body: JSON.stringify({
-          take_value_from_temporary_zZ,
-          zZ_first_multiplication_factor,
-          zZ_second_multiplication_factor,
+          take_value_from_temporary_zZ: take_value_from_temporary_zZ,
+          zZ_first_multiplication_factor: zZ_first_multiplication_factor,
+          zZ_second_multiplication_factor: zZ_second_multiplication_factor,
         }),
+      }).then(async (res) => {
+        if (!res.ok) {
+          const data = await res.json();
+          console.error(`Error resetting ${party}: ${data.detail}`);
+        }
       }),
     );
   }
@@ -531,10 +538,15 @@ export const xor = async (
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          Accept: 'application/json',
         },
         body: JSON.stringify({
           calculate_for_xor: true,
         }),
+      }).then(async (res) => {
+        if (!res.ok) {
+          const data = await res.json();
+        }
       }),
     );
   }
@@ -548,6 +560,7 @@ export const xor = async (
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Accept: 'application/json',
         },
         body: JSON.stringify({
           take_value_from_temporary_zZ: take_value_from_temporary_zZ,
@@ -567,6 +580,7 @@ export const xor = async (
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Accept: 'application/json',
         },
       }),
     );
@@ -584,6 +598,7 @@ export async function calculateFinalComparisonResult(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
     })
       .then(async (res) => {
@@ -604,6 +619,7 @@ export async function calculateFinalComparisonResult(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
     })
       .then(async (res) => {
@@ -624,10 +640,11 @@ export async function calculateFinalComparisonResult(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
       body: JSON.stringify({
         calculate_final_comparison_result: true,
-        opened_a: openedA.toString(16),
+        opened_a: '0x' + openedA.toString(16),
         l: l,
         k: k,
       }),
@@ -650,6 +667,7 @@ export async function calculateFinalComparisonResult(
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
       body: JSON.stringify({
         calculate_for_xor: true,
@@ -677,9 +695,10 @@ export async function calculateFinalComparisonResult(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
       body: JSON.stringify({
-        opened_a: openedA.toString(16),
+        opened_a: '0x' + openedA.toString(16),
         l: l,
         k: k,
       }),
@@ -712,7 +731,7 @@ export const romb = async (serverAdresses: string[]) => {
     fetch(`${server}/api/reset-calculation`, {
       method: 'POST',
       headers: {
-        'content-type': 'application/json',
+        'Content-Type': 'application/json',
         Accept: 'application/json',
       },
     })
@@ -733,7 +752,7 @@ export const romb = async (serverAdresses: string[]) => {
     fetch(`${server}/api/redistribute-q`, {
       method: 'POST',
       headers: {
-        'content-type': 'application/json',
+        'Content-Type': 'application/json',
         Accept: 'application/json',
       },
     })
@@ -755,7 +774,7 @@ export const romb = async (serverAdresses: string[]) => {
     fetch(`${server}/api/redistribute-r`, {
       method: 'POST',
       headers: {
-        'content-type': 'application/json',
+        'Content-Type': 'application/json',
         Accept: 'application/json',
       },
       body: JSON.stringify({
@@ -767,9 +786,11 @@ export const romb = async (serverAdresses: string[]) => {
       .then(async (res) => {
         const data = await res.json();
         if (!res.ok) {
-          messageCalculateRomb.push([server, data.detail]);
+          errorCalculateRomb.push([server, data.detail]);
+
           return;
         }
+        messageCalculateRomb.push([server, data.detail]);
         Rs.push([server, data.secret]);
       })
       .catch((err) => {
@@ -782,7 +803,7 @@ export const romb = async (serverAdresses: string[]) => {
     fetch(`${server}/api/calculate-multiplicative-share`, {
       method: 'PUT',
       headers: {
-        'content-type': 'application/json',
+        'Content-Type': 'application/json',
         Accept: 'application/json',
       },
       body: JSON.stringify({
@@ -793,9 +814,12 @@ export const romb = async (serverAdresses: string[]) => {
       .then(async (res) => {
         const data = await res.json();
         if (!res.ok) {
-          messageCalculateRomb.push([server, data.detail]);
+          errorCalculateRomb.push([server, data.detail]);
+
           return;
         }
+
+        messageCalculateRomb.push([server, data.detail]);
         Multishares.push([server, data.secret]);
       })
       .catch((err) => {
@@ -808,7 +832,7 @@ export const romb = async (serverAdresses: string[]) => {
     fetch(`${server}/api/reset-calculation`, {
       method: 'POST',
       headers: {
-        'content-type': 'application/json',
+        'Content-Type': 'application/json',
         Accept: 'application/json',
       },
     })
@@ -825,7 +849,7 @@ export const romb = async (serverAdresses: string[]) => {
   );
   await Promise.all(taskRomb5);
 
-  await xor(serverAdresses, false, [0, 0], [1, 1]);
+  await xor(serverAdresses, false, [0, 1], [1, 1]);
 
   Qs = [];
   Rs = [];
@@ -834,7 +858,7 @@ export const romb = async (serverAdresses: string[]) => {
     fetch(`${server}/api/redistribute-q`, {
       method: 'POST',
       headers: {
-        'content-type': 'application/json',
+        'Content-Type': 'application/json',
         Accept: 'application/json',
       },
     })
@@ -856,22 +880,24 @@ export const romb = async (serverAdresses: string[]) => {
     fetch(`${server}/api/redistribute-r`, {
       method: 'POST',
       headers: {
-        'content-type': 'application/json',
+        'Content-Type': 'application/json',
         Accept: 'application/json',
       },
       body: JSON.stringify({
-        take_value_from_temporary_zZ: false,
+        take_value_from_temporary_zZ: true,
         zZ_first_multiplication_factor: [0, 0],
-        zZ_second_multiplication_factor: [1, 0],
+        zZ_second_multiplication_factor: [1],
       }),
     })
       .then(async (res) => {
         const data = await res.json();
         if (!res.ok) {
-          messageCalculateRomb.push([server, data.detail]);
+          errorCalculateRomb.push([server, data.detail]);
+
           return;
         }
         Rs.push([server, data.secret]);
+        messageCalculateRomb.push([server, data.detail]);
       })
       .catch((err) => {
         errorCalculateRomb.push([server, err.message]);
@@ -885,21 +911,24 @@ export const romb = async (serverAdresses: string[]) => {
     fetch(`${server}/api/calculate-multiplicative-share`, {
       method: 'PUT',
       headers: {
-        'content-type': 'application/json',
+        'Content-Type': 'application/json',
         Accept: 'application/json',
       },
       body: JSON.stringify({
-        set_in_temporary_zZ_index: 0,
+        set_in_temporary_zZ_index: 1,
         calculate_for_xor: false,
       }),
     })
       .then(async (res) => {
         const data = await res.json();
         if (!res.ok) {
-          messageCalculateRomb.push([server, data.detail]);
+          errorCalculateRomb.push([server, data.detail]);
+
           return;
         }
+
         Multishares.push([server, data.secret]);
+        messageCalculateRomb.push([server, data.detail]);
       })
       .catch((err) => {
         errorCalculateRomb.push([server, err.message]);
@@ -911,7 +940,7 @@ export const romb = async (serverAdresses: string[]) => {
     fetch(`${server}/api/reset-calculation`, {
       method: 'POST',
       headers: {
-        'content-type': 'application/json',
+        'Content-Type': 'application/json',
         Accept: 'application/json',
       },
     })

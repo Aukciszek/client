@@ -76,86 +76,97 @@ export default function AdminDashboard() {
   };
 
   const handleStartAuction = async () => {
-    const serverAddresses = getServerAddresses(servers);
+    let i = 0;
+    while (i < 30) {
+      i++;
+      const serverAddresses = getServerAddresses(servers);
 
-    toast.loading('Starting the auction!');
+      toast.loading('Starting the auction!');
 
-    const resetCalculationInfo: PromiseResult =
-      await resetCalculation(serverAddresses);
+      const resetCalculationInfo: PromiseResult =
+        await resetCalculation(serverAddresses);
 
-    toast.dismiss();
+      toast.dismiss();
 
-    handleToast(
-      resetCalculationInfo,
-      'Reset calculation success!',
-      'Reset calculation failed!',
-    );
+      handleToast(
+        resetCalculationInfo,
+        'Reset calculation success!',
+        'Reset calculation failed!',
+      );
 
-    const resetComparisonInfo = await resetComparison(serverAddresses);
+      const resetComparisonInfo = await resetComparison(serverAddresses);
 
-    handleToast(
-      resetComparisonInfo,
-      'Reset comparison success!',
-      'Reset comparison failed!',
-    );
+      handleToast(
+        resetComparisonInfo,
+        'Reset comparison success!',
+        'Reset comparison failed!',
+      );
 
-    const biddersIdsInfo = await getBiddersIds(serverAddresses);
+      const biddersIdsInfo = await getBiddersIds(serverAddresses);
 
-    handleBiddersIdsToast(
-      biddersIdsInfo,
-      'Successfully retrieved bidder IDs!',
-      'Failed to retrieve bidder IDs!',
-    );
+      handleBiddersIdsToast(
+        biddersIdsInfo,
+        'Successfully retrieved bidder IDs!',
+        'Failed to retrieve bidder IDs!',
+      );
 
-    if (typeof biddersIdsInfo === 'string') return;
+      if (typeof biddersIdsInfo === 'string') return;
 
-    const calculateAComparisonInfo = await calculateAComparison(
-      serverAddresses,
-      biddersIdsInfo,
-    );
+      const calculateAComparisonInfo = await calculateAComparison(
+        serverAddresses,
+        biddersIdsInfo,
+      );
 
-    handleToast(
-      calculateAComparisonInfo,
-      'Calculate A comparison success!',
-      'Calculate A comparison failed!',
-    );
+      handleToast(
+        calculateAComparisonInfo,
+        'Calculate A comparison success!',
+        'Calculate A comparison failed!',
+      );
 
-    const promisesReconstructInfo = await promisesReconstruct(serverAddresses);
+      const promisesReconstructInfo =
+        await promisesReconstruct(serverAddresses);
 
-    handleToast(
-      promisesReconstructInfo,
-      'Reconstruct secrets success!',
-      'Reconstruct secrets failed!',
-    );
+      handleToast(
+        promisesReconstructInfo,
+        'Reconstruct secrets success!',
+        'Reconstruct secrets failed!',
+      );
 
-    const calculateZInfo = await calculateZ(
-      serverAddresses,
-      promisesReconstructInfo.secrets[0][1],
-    );
+      const calculateZInfo = await calculateZ(
+        serverAddresses,
+        promisesReconstructInfo.secrets[0][1],
+      );
 
-    handleToast(calculateZInfo, 'Calculate Z success!', 'Calculate Z failed!');
+      handleToast(
+        calculateZInfo,
+        'Calculate Z success!',
+        'Calculate Z failed!',
+      );
 
-    const popZInfo = await popZ(serverAddresses);
+      const popZInfo = await popZ(serverAddresses);
 
-    handleToast(popZInfo, 'Pop Z success!', 'Pop Z failed!');
+      handleToast(popZInfo, 'Pop Z success!', 'Pop Z failed!');
 
-    await calculateFinalComparisonResult(
-      serverAddresses,
-      promisesReconstructInfo.secrets[0][1],
-    );
+      await calculateFinalComparisonResult(
+        serverAddresses,
+        promisesReconstructInfo.secrets[0][1],
+      );
 
-    const recalculateFinalSecretsInfo =
-      await recalculateFinalSecrets(serverAddresses);
+      const recalculateFinalSecretsInfo =
+        await recalculateFinalSecrets(serverAddresses);
 
-    handleToast(
-      recalculateFinalSecretsInfo,
-      'Recalculate final secrets success!',
-      'Recalculate final secrets failed!',
-    );
+      handleToast(
+        recalculateFinalSecretsInfo,
+        'Recalculate final secrets success!',
+        'Recalculate final secrets failed!',
+      );
 
-    const firstResult = recalculateFinalSecretsInfo.finalSecrets[0][1];
+      const firstResult = recalculateFinalSecretsInfo.finalSecrets[0][1];
 
-    handleWinnerToast(recalculateFinalSecretsInfo, firstResult);
+      console.log('First result:', firstResult);
+
+      handleWinnerToast(recalculateFinalSecretsInfo, firstResult);
+    }
   };
 
   return (
