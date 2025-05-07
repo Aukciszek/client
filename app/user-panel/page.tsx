@@ -13,6 +13,7 @@ import type { Server } from '../globalInterface';
 import { MdOutlineInfo } from 'react-icons/md';
 import { getInitialValues, handleShamir } from './helpers';
 import { toast } from 'react-toastify';
+import ProtectedRoute from '../components/ProtectedRoute';
 
 export default function ClientDashboard() {
   const [masterServerAddress, setMasterServerAddress] = useState('');
@@ -76,7 +77,7 @@ export default function ClientDashboard() {
   };
 
   return (
-    <>
+    <ProtectedRoute>
       <Navbar isLogged />
       <main className='container py-6'>
         <div className='flex flex-col gap-6 items-start lg:flex-row'>
@@ -188,6 +189,6 @@ export default function ClientDashboard() {
         </div>
       </main>
       <Footer />
-    </>
+    </ProtectedRoute>
   );
 }
