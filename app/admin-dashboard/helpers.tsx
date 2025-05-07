@@ -9,7 +9,6 @@ import type {
   StringPair,
   PromiseResult,
   NumberPair,
-  PromiseResultNumbers,
 } from '../interface';
 
 export const sendInitialData = async (
@@ -251,7 +250,7 @@ export const resetCalculation = async (
       fetch(`${server}/api/reset-calculation`, {
         method: 'POST',
         headers: {
-          'content-type': 'application/json',
+          'Content-Type': 'application/json',
           Accept: 'application/json',
         },
       })
@@ -283,7 +282,7 @@ export const resetComparison = async (
       fetch(`${server}/api/reset-comparison`, {
         method: 'POST',
         headers: {
-          'content-type': 'application/json',
+          'Content-Type': 'application/json',
           Accept: 'application/json',
         },
       })
@@ -316,12 +315,10 @@ export const calculateAComparison = async (
       fetch(`${server}/api/calculate-a-comparison`, {
         method: 'POST',
         headers: {
-          'content-type': 'application/json',
+          'Content-Type': 'application/json',
           Accept: 'application/json',
         },
         body: JSON.stringify({
-          l: l,
-          k: k,
           first_client_id: biddersIds[0],
           second_client_id: biddersIds[1],
         }),
@@ -355,7 +352,7 @@ export const promisesReconstruct = async (
       fetch(`${server}/api/reconstruct-secret`, {
         method: 'GET',
         headers: {
-          'content-type': 'application/json',
+          'Content-Type': 'application/json',
           Accept: 'application/json',
         },
       })
@@ -379,7 +376,7 @@ export const promisesReconstruct = async (
 
 export const calculateZ = async (
   servers: string[],
-  secrets: number,
+  openedA: number,
 ): Promise<PromiseResult> => {
   const messageInfo: StringPair[] = [];
   const errorInfo: StringPair[] = [];
@@ -389,13 +386,13 @@ export const calculateZ = async (
       fetch(`${server}/api/calculate-z-comparison`, {
         method: 'POST',
         headers: {
-          'content-type': 'application/json',
+          'Content-Type': 'application/json',
           Accept: 'application/json',
         },
         body: JSON.stringify({
+          opened_a: openedA,
           l: l,
           k: k,
-          opened_a: secrets.toString(16),
         }),
       })
         .then(async (res) => {
@@ -419,7 +416,7 @@ export const popZ = async (servers: string[]): Promise<PromiseResult> => {
   const messageInfo: StringPair[] = [];
   const errorInfo: StringPair[] = [];
 
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < l; i++) {
     await romb(servers);
 
     await Promise.all(
@@ -427,7 +424,7 @@ export const popZ = async (servers: string[]): Promise<PromiseResult> => {
         fetch(`${server}/api/pop-zZ`, {
           method: 'POST',
           headers: {
-            'content-type': 'application/json',
+            'Content-Type': 'application/json',
             Accept: 'application/json',
           },
         })
@@ -454,14 +451,14 @@ export const recalculateFinalSecrets = async (
 ): Promise<PromiseResultFinalSecrets> => {
   const messageInfo: StringPair[] = [];
   const errorInfo: StringPair[] = [];
-  const finalSecrets: StringNumberPair[] = [];
+  const finalSecrets: StringPair[] = [];
 
   await Promise.all(
     servers.map((server) =>
       fetch(`${server}/api/reconstruct-secret`, {
         method: 'GET',
         headers: {
-          'content-type': 'application/json',
+          'Content-Type': 'application/json',
           Accept: 'application/json',
         },
       })
@@ -491,20 +488,19 @@ export const xor = async (
 ) => {
   const tasks = [];
 
-  // Calculate and share q for each party
   for (const party of parties) {
     tasks.push(
       fetch(`${party}/api/redistribute-q`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Accept: 'application/json',
         },
       }),
     );
   }
   await Promise.all(tasks);
 
-  // Calculate and share r for each party
   const tasks2 = [];
   for (const party of parties) {
     tasks2.push(
@@ -512,18 +508,23 @@ export const xor = async (
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Accept: 'application/json',
         },
         body: JSON.stringify({
-          take_value_from_temporary_zZ,
-          zZ_first_multiplication_factor,
-          zZ_second_multiplication_factor,
+          take_value_from_temporary_zZ: take_value_from_temporary_zZ,
+          zZ_first_multiplication_factor: zZ_first_multiplication_factor,
+          zZ_second_multiplication_factor: zZ_second_multiplication_factor,
         }),
+      }).then(async (res) => {
+        if (!res.ok) {
+          const data = await res.json();
+          console.error(`Error resetting ${party}: ${data.detail}`);
+        }
       }),
     );
   }
   await Promise.all(tasks2);
 
-  // Calculate the multiplicative share for each party
   const tasks3 = [];
   for (const party of parties) {
     tasks3.push(
@@ -531,16 +532,20 @@ export const xor = async (
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          Accept: 'application/json',
         },
         body: JSON.stringify({
           calculate_for_xor: true,
         }),
+      }).then(async (res) => {
+        if (!res.ok) {
+          const data = await res.json();
+        }
       }),
     );
   }
   await Promise.all(tasks3);
 
-  // xor for all parties
   const tasks4 = [];
   for (const party of parties) {
     tasks4.push(
@@ -548,6 +553,7 @@ export const xor = async (
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Accept: 'application/json',
         },
         body: JSON.stringify({
           take_value_from_temporary_zZ: take_value_from_temporary_zZ,
@@ -559,7 +565,6 @@ export const xor = async (
   }
   await Promise.all(tasks4);
 
-  // Reset the calculation for parties
   const tasks5 = [];
   for (const party of parties) {
     tasks5.push(
@@ -567,6 +572,7 @@ export const xor = async (
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Accept: 'application/json',
         },
       }),
     );
@@ -578,12 +584,12 @@ export async function calculateFinalComparisonResult(
   parties: string[],
   openedA: number,
 ) {
-  // Reset the calculation for parties
   const resetTasks = parties.map((party) =>
     fetch(`${party}/api/reset-calculation`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
     })
       .then(async (res) => {
@@ -598,12 +604,12 @@ export async function calculateFinalComparisonResult(
   );
   await Promise.all(resetTasks);
 
-  // Calculate and share q for each party
   const qTasks = parties.map((party) =>
     fetch(`${party}/api/redistribute-q`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
     })
       .then(async (res) => {
@@ -618,16 +624,16 @@ export async function calculateFinalComparisonResult(
   );
   await Promise.all(qTasks);
 
-  // Calculate and share r for each party
   const rTasks = parties.map((party) =>
     fetch(`${party}/api/redistribute-r`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
       body: JSON.stringify({
         calculate_final_comparison_result: true,
-        opened_a: openedA.toString(16),
+        opened_a: openedA,
         l: l,
         k: k,
       }),
@@ -644,12 +650,12 @@ export async function calculateFinalComparisonResult(
   );
   await Promise.all(rTasks);
 
-  // Calculate the multiplicative share for each party
   const multiplicativeShareTasks = parties.map((party) =>
     fetch(`${party}/api/calculate-multiplicative-share`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
       body: JSON.stringify({
         calculate_for_xor: true,
@@ -671,15 +677,15 @@ export async function calculateFinalComparisonResult(
   );
   await Promise.all(multiplicativeShareTasks);
 
-  // xor for all parties
   const comparisonResultTasks = parties.map((party) =>
     fetch(`${party}/api/calculate-comparison-result`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
       body: JSON.stringify({
-        opened_a: openedA.toString(16),
+        opened_a: openedA,
         l: l,
         k: k,
       }),
@@ -712,7 +718,7 @@ export const romb = async (serverAdresses: string[]) => {
     fetch(`${server}/api/reset-calculation`, {
       method: 'POST',
       headers: {
-        'content-type': 'application/json',
+        'Content-Type': 'application/json',
         Accept: 'application/json',
       },
     })
@@ -733,7 +739,7 @@ export const romb = async (serverAdresses: string[]) => {
     fetch(`${server}/api/redistribute-q`, {
       method: 'POST',
       headers: {
-        'content-type': 'application/json',
+        'Content-Type': 'application/json',
         Accept: 'application/json',
       },
     })
@@ -755,7 +761,7 @@ export const romb = async (serverAdresses: string[]) => {
     fetch(`${server}/api/redistribute-r`, {
       method: 'POST',
       headers: {
-        'content-type': 'application/json',
+        'Content-Type': 'application/json',
         Accept: 'application/json',
       },
       body: JSON.stringify({
@@ -767,9 +773,11 @@ export const romb = async (serverAdresses: string[]) => {
       .then(async (res) => {
         const data = await res.json();
         if (!res.ok) {
-          messageCalculateRomb.push([server, data.detail]);
+          errorCalculateRomb.push([server, data.detail]);
+
           return;
         }
+        messageCalculateRomb.push([server, data.detail]);
         Rs.push([server, data.secret]);
       })
       .catch((err) => {
@@ -782,7 +790,7 @@ export const romb = async (serverAdresses: string[]) => {
     fetch(`${server}/api/calculate-multiplicative-share`, {
       method: 'PUT',
       headers: {
-        'content-type': 'application/json',
+        'Content-Type': 'application/json',
         Accept: 'application/json',
       },
       body: JSON.stringify({
@@ -793,9 +801,12 @@ export const romb = async (serverAdresses: string[]) => {
       .then(async (res) => {
         const data = await res.json();
         if (!res.ok) {
-          messageCalculateRomb.push([server, data.detail]);
+          errorCalculateRomb.push([server, data.detail]);
+
           return;
         }
+
+        messageCalculateRomb.push([server, data.detail]);
         Multishares.push([server, data.secret]);
       })
       .catch((err) => {
@@ -808,7 +819,7 @@ export const romb = async (serverAdresses: string[]) => {
     fetch(`${server}/api/reset-calculation`, {
       method: 'POST',
       headers: {
-        'content-type': 'application/json',
+        'Content-Type': 'application/json',
         Accept: 'application/json',
       },
     })
@@ -825,7 +836,7 @@ export const romb = async (serverAdresses: string[]) => {
   );
   await Promise.all(taskRomb5);
 
-  await xor(serverAdresses, false, [0, 0], [1, 1]);
+  await xor(serverAdresses, false, [0, 1], [1, 1]);
 
   Qs = [];
   Rs = [];
@@ -834,7 +845,7 @@ export const romb = async (serverAdresses: string[]) => {
     fetch(`${server}/api/redistribute-q`, {
       method: 'POST',
       headers: {
-        'content-type': 'application/json',
+        'Content-Type': 'application/json',
         Accept: 'application/json',
       },
     })
@@ -856,22 +867,24 @@ export const romb = async (serverAdresses: string[]) => {
     fetch(`${server}/api/redistribute-r`, {
       method: 'POST',
       headers: {
-        'content-type': 'application/json',
+        'Content-Type': 'application/json',
         Accept: 'application/json',
       },
       body: JSON.stringify({
-        take_value_from_temporary_zZ: false,
+        take_value_from_temporary_zZ: true,
         zZ_first_multiplication_factor: [0, 0],
-        zZ_second_multiplication_factor: [1, 0],
+        zZ_second_multiplication_factor: [1],
       }),
     })
       .then(async (res) => {
         const data = await res.json();
         if (!res.ok) {
-          messageCalculateRomb.push([server, data.detail]);
+          errorCalculateRomb.push([server, data.detail]);
+
           return;
         }
         Rs.push([server, data.secret]);
+        messageCalculateRomb.push([server, data.detail]);
       })
       .catch((err) => {
         errorCalculateRomb.push([server, err.message]);
@@ -885,21 +898,24 @@ export const romb = async (serverAdresses: string[]) => {
     fetch(`${server}/api/calculate-multiplicative-share`, {
       method: 'PUT',
       headers: {
-        'content-type': 'application/json',
+        'Content-Type': 'application/json',
         Accept: 'application/json',
       },
       body: JSON.stringify({
-        set_in_temporary_zZ_index: 0,
+        set_in_temporary_zZ_index: 1,
         calculate_for_xor: false,
       }),
     })
       .then(async (res) => {
         const data = await res.json();
         if (!res.ok) {
-          messageCalculateRomb.push([server, data.detail]);
+          errorCalculateRomb.push([server, data.detail]);
+
           return;
         }
+
         Multishares.push([server, data.secret]);
+        messageCalculateRomb.push([server, data.detail]);
       })
       .catch((err) => {
         errorCalculateRomb.push([server, err.message]);
@@ -911,7 +927,7 @@ export const romb = async (serverAdresses: string[]) => {
     fetch(`${server}/api/reset-calculation`, {
       method: 'POST',
       headers: {
-        'content-type': 'application/json',
+        'Content-Type': 'application/json',
         Accept: 'application/json',
       },
     })
@@ -985,7 +1001,7 @@ export const handleBiddersIdsToast = (
 
 export const handleWinnerToast = (
   recalculateFinalSecretsInfo: PromiseResultFinalSecrets,
-  firstResult: number,
+  currentWinner: number,
 ): void => {
   const allResultsMatch = areAllValuesTheSame(
     recalculateFinalSecretsInfo.finalSecrets,
@@ -993,7 +1009,7 @@ export const handleWinnerToast = (
 
   if (allResultsMatch) {
     toast.success(
-      `Auction completed successfully! ${firstResult === 0 ? 'First client won!' : 'Second client won!'}`,
+      `Auction completed successfully! Client with ID: ${currentWinner}, is the winner!`,
       {
         autoClose: false,
         closeOnClick: true,
@@ -1008,3 +1024,83 @@ export const handleWinnerToast = (
     });
   }
 };
+
+export const performComparison = async (
+  serverAddresses: string[],
+  biddersIdsInfo: NumberPair,
+): Promise<void> => {
+  let currentWinner = biddersIdsInfo.pop();
+  if (!currentWinner) return;
+
+  let currentContender;
+  let recalculateFinalSecretsInfo;
+
+  while (biddersIdsInfo.length > 0) {
+    currentContender = biddersIdsInfo.pop();
+    if (currentContender === undefined) return;
+
+    const resetComparisonInfo = await resetComparison(serverAddresses);
+
+    handleToast(
+      resetComparisonInfo,
+      'Reset comparison success!',
+      'Reset comparison failed!',
+    );
+
+    const calculateAComparisonInfo = await calculateAComparison(
+      serverAddresses,
+      [currentWinner, currentContender],
+    );
+
+    handleToast(
+      calculateAComparisonInfo,
+      'Calculate A comparison success!',
+      'Calculate A comparison failed!',
+    );
+
+    const promisesReconstructInfo =
+      await promisesReconstruct(serverAddresses);
+
+    handleToast(
+      promisesReconstructInfo,
+      'Reconstruct secrets success!',
+      'Reconstruct secrets failed!',
+    );
+
+    const calculateZInfo = await calculateZ(
+      serverAddresses,
+      promisesReconstructInfo.secrets[0][1],
+    );
+
+    handleToast(
+      calculateZInfo,
+      'Calculate Z success!',
+      'Calculate Z failed!',
+    );
+
+    const popZInfo = await popZ(serverAddresses);
+
+    handleToast(popZInfo, 'Pop Z success!', 'Pop Z failed!');
+    
+    await calculateFinalComparisonResult(
+      serverAddresses,
+      promisesReconstructInfo.secrets[0][1],
+    );
+
+    recalculateFinalSecretsInfo =
+      await recalculateFinalSecrets(serverAddresses);
+
+    handleToast(
+      recalculateFinalSecretsInfo,
+      'Recalculate final secrets success!',
+      'Recalculate final secrets failed!',
+    );
+    
+    const firstResult = recalculateFinalSecretsInfo.finalSecrets[0][1];
+    
+    if (parseInt(firstResult, 16) === 0) currentWinner = currentContender;
+  }
+  
+  if (recalculateFinalSecretsInfo === undefined) return;
+  handleWinnerToast(recalculateFinalSecretsInfo, currentWinner);
+}

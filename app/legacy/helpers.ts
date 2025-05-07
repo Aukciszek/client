@@ -26,7 +26,6 @@ export function getRandomBits(bitLength: number): bigint {
 }
 
 export function getSecureRandomInt(min: bigint, max: bigint): bigint {
-  // min is inclusive, max is exclusive
   const range = max - min;
   const bitLength = range.toString(2).length;
   let randomNumber = BigInt(0);
@@ -130,9 +129,3 @@ export function shamir(
 
   return [shares, p];
 }
-
-// test if const PRIME_NUMBER is prime
-// function PRIME_NUMBERPassesMillerRabinPrimeTest()
-// {
-//   assert(millerRabinPrimeTest(BigInt(PRIME_NUMBER), 2048) == true);
-// }

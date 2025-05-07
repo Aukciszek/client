@@ -75,7 +75,7 @@ export const handleShamir = async (
         },
         body: JSON.stringify({
           client_id: id,
-          share: shares[i][1].toString(),
+          share: shares[i][1].toString(16),
         }),
       })
         .then(async (res) => {
@@ -113,12 +113,15 @@ export function shamir(
   const p = BigInt(PRIME_NUMBER);
 
   const coefficients: bigint[] = Array.from({ length: t }, () =>
-    getSecureRandomInt(BigInt(0), p),
+    getSecureRandomInt(BigInt(0), p - BigInt(1)),
   );
   coefficients[0] = k0;
 
   if (coefficients[coefficients.length - 1] === BigInt(0)) {
-    coefficients[coefficients.length - 1] = getSecureRandomInt(BigInt(1), p);
+    coefficients[coefficients.length - 1] = getSecureRandomInt(
+      BigInt(1),
+      p - BigInt(1),
+    );
   }
 
   const shares: Array<[number, bigint]> = [];
@@ -131,7 +134,6 @@ export function shamir(
 }
 
 export function getSecureRandomInt(min: bigint, max: bigint): bigint {
-  // min is inclusive, max is exclusive
   const range = max - min;
   const bitLength = range.toString(2).length;
   let randomNumber = BigInt(0);
