@@ -319,9 +319,6 @@ export const calculateAComparison = async (
           Accept: 'application/json',
         },
         body: JSON.stringify({
-          // l and k are not directly used by the backend logic for this specific calculation
-          // according to the provided python code's calculate_a_comparison function.
-          // They are part of the AComparisonData model but seem relevant later.
           first_client_id: biddersIds[0],
           second_client_id: biddersIds[1],
         }),
@@ -491,7 +488,6 @@ export const xor = async (
 ) => {
   const tasks = [];
 
-  // Calculate and share q for each party
   for (const party of parties) {
     tasks.push(
       fetch(`${party}/api/redistribute-q`, {
@@ -505,7 +501,6 @@ export const xor = async (
   }
   await Promise.all(tasks);
 
-  // Calculate and share r for each party
   const tasks2 = [];
   for (const party of parties) {
     tasks2.push(
@@ -530,7 +525,6 @@ export const xor = async (
   }
   await Promise.all(tasks2);
 
-  // Calculate the multiplicative share for each party
   const tasks3 = [];
   for (const party of parties) {
     tasks3.push(
@@ -552,7 +546,6 @@ export const xor = async (
   }
   await Promise.all(tasks3);
 
-  // xor for all parties
   const tasks4 = [];
   for (const party of parties) {
     tasks4.push(
@@ -572,7 +565,6 @@ export const xor = async (
   }
   await Promise.all(tasks4);
 
-  // Reset the calculation for parties
   const tasks5 = [];
   for (const party of parties) {
     tasks5.push(
@@ -592,7 +584,6 @@ export async function calculateFinalComparisonResult(
   parties: string[],
   openedA: number,
 ) {
-  // Reset the calculation for parties
   const resetTasks = parties.map((party) =>
     fetch(`${party}/api/reset-calculation`, {
       method: 'POST',
@@ -613,7 +604,6 @@ export async function calculateFinalComparisonResult(
   );
   await Promise.all(resetTasks);
 
-  // Calculate and share q for each party
   const qTasks = parties.map((party) =>
     fetch(`${party}/api/redistribute-q`, {
       method: 'POST',
@@ -634,7 +624,6 @@ export async function calculateFinalComparisonResult(
   );
   await Promise.all(qTasks);
 
-  // Calculate and share r for each party
   const rTasks = parties.map((party) =>
     fetch(`${party}/api/redistribute-r`, {
       method: 'POST',
@@ -661,7 +650,6 @@ export async function calculateFinalComparisonResult(
   );
   await Promise.all(rTasks);
 
-  // Calculate the multiplicative share for each party
   const multiplicativeShareTasks = parties.map((party) =>
     fetch(`${party}/api/calculate-multiplicative-share`, {
       method: 'PUT',
@@ -689,7 +677,6 @@ export async function calculateFinalComparisonResult(
   );
   await Promise.all(multiplicativeShareTasks);
 
-  // xor for all parties
   const comparisonResultTasks = parties.map((party) =>
     fetch(`${party}/api/calculate-comparison-result`, {
       method: 'POST',
@@ -1052,7 +1039,6 @@ export const performComparison = async (
     currentContender = biddersIdsInfo.pop();
     if (currentContender === undefined) return;
 
-    // Reset all info on servers
     const resetComparisonInfo = await resetComparison(serverAddresses);
 
     handleToast(

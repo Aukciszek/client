@@ -134,7 +134,6 @@ export function shamir(
 }
 
 export function getSecureRandomInt(min: bigint, max: bigint): bigint {
-  // min is inclusive, max is exclusive
   const range = max - min;
   const bitLength = range.toString(2).length;
   let randomNumber = BigInt(0);
