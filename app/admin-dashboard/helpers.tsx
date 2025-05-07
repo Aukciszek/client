@@ -454,7 +454,7 @@ export const recalculateFinalSecrets = async (
 ): Promise<PromiseResultFinalSecrets> => {
   const messageInfo: StringPair[] = [];
   const errorInfo: StringPair[] = [];
-  const finalSecrets: StringNumberPair[] = [];
+  const finalSecrets: StringPair[] = [];
 
   await Promise.all(
     servers.map((server) =>
@@ -612,7 +612,6 @@ export async function calculateFinalComparisonResult(
       }),
   );
   await Promise.all(resetTasks);
-  console.log(openedA);
 
   // Calculate and share q for each party
   const qTasks = parties.map((party) =>
@@ -1015,7 +1014,7 @@ export const handleBiddersIdsToast = (
 
 export const handleWinnerToast = (
   recalculateFinalSecretsInfo: PromiseResultFinalSecrets,
-  firstResult: number,
+  currentWinner: number,
 ): void => {
   const allResultsMatch = areAllValuesTheSame(
     recalculateFinalSecretsInfo.finalSecrets,
@@ -1023,7 +1022,7 @@ export const handleWinnerToast = (
 
   if (allResultsMatch) {
     toast.success(
-      `Auction completed successfully! ${firstResult === 1 ? 'First client won!' : 'Second client won!'}`,
+      `Auction completed successfully! Client with ID: ${currentWinner}, is the winner!`,
       {
         autoClose: false,
         closeOnClick: true,
@@ -1038,3 +1037,84 @@ export const handleWinnerToast = (
     });
   }
 };
+
+export const performComparison = async (
+  serverAddresses: string[],
+  biddersIdsInfo: NumberPair,
+): Promise<void> => {
+  let currentWinner = biddersIdsInfo.pop();
+  if (!currentWinner) return;
+
+  let currentContender;
+  let recalculateFinalSecretsInfo;
+
+  while (biddersIdsInfo.length > 0) {
+    currentContender = biddersIdsInfo.pop();
+    if (currentContender === undefined) return;
+
+    // Reset all info on servers
+    const resetComparisonInfo = await resetComparison(serverAddresses);
+
+    handleToast(
+      resetComparisonInfo,
+      'Reset comparison success!',
+      'Reset comparison failed!',
+    );
+
+    const calculateAComparisonInfo = await calculateAComparison(
+      serverAddresses,
+      [currentWinner, currentContender],
+    );
+
+    handleToast(
+      calculateAComparisonInfo,
+      'Calculate A comparison success!',
+      'Calculate A comparison failed!',
+    );
+
+    const promisesReconstructInfo =
+      await promisesReconstruct(serverAddresses);
+
+    handleToast(
+      promisesReconstructInfo,
+      'Reconstruct secrets success!',
+      'Reconstruct secrets failed!',
+    );
+
+    const calculateZInfo = await calculateZ(
+      serverAddresses,
+      promisesReconstructInfo.secrets[0][1],
+    );
+
+    handleToast(
+      calculateZInfo,
+      'Calculate Z success!',
+      'Calculate Z failed!',
+    );
+
+    const popZInfo = await popZ(serverAddresses);
+
+    handleToast(popZInfo, 'Pop Z success!', 'Pop Z failed!');
+    
+    await calculateFinalComparisonResult(
+      serverAddresses,
+      promisesReconstructInfo.secrets[0][1],
+    );
+
+    recalculateFinalSecretsInfo =
+      await recalculateFinalSecrets(serverAddresses);
+
+    handleToast(
+      recalculateFinalSecretsInfo,
+      'Recalculate final secrets success!',
+      'Recalculate final secrets failed!',
+    );
+    
+    const firstResult = recalculateFinalSecretsInfo.finalSecrets[0][1];
+    
+    if (parseInt(firstResult, 16) === 0) currentWinner = currentContender;
+  }
+  
+  if (recalculateFinalSecretsInfo === undefined) return;
+  handleWinnerToast(recalculateFinalSecretsInfo, currentWinner);
+}

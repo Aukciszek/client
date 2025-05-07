@@ -129,7 +129,6 @@ export function shamir(
   for (let i = 1; i <= n; i++) {
     shares.push([i, f(i, coefficients, p, t)]);
   }
-  console.log('p: ', p);
 
   return [shares, p];
 }

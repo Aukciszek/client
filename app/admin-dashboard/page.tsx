@@ -8,25 +8,15 @@ import BidServerPanel from '../components/bidServerPanel';
 import { MdGavel, MdOutlineDelete, MdRestore } from 'react-icons/md';
 import type { Server } from './interface';
 import {
-  calculateAComparison,
-  calculateFinalComparisonResult,
-  calculateZ,
   getBiddersIds,
   getRandomString,
   handleBiddersIdsToast,
-  handleToast,
-  handleWinnerToast,
   hardReset,
-  popZ,
-  promisesReconstruct,
-  recalculateFinalSecrets,
-  resetCalculation,
-  resetComparison,
+  performComparison,
   sendInitialData,
 } from './helpers';
 import { getServerAddresses } from '../globalHelpers';
 import { toast } from 'react-toastify';
-import type { PromiseResult } from '../interface';
 
 export default function AdminDashboard() {
   const [servers, setServers] = useState<Server[]>([]);
@@ -76,97 +66,23 @@ export default function AdminDashboard() {
   };
 
   const handleStartAuction = async () => {
-    let i = 0;
-    while (i < 30) {
-      i++;
-      const serverAddresses = getServerAddresses(servers);
+    const serverAddresses = getServerAddresses(servers);
 
-      toast.loading('Starting the auction!');
+    toast.loading('Starting the auction!');
+    toast.dismiss();
+    
+    const biddersIdsInfo = await getBiddersIds(serverAddresses);
 
-      const resetCalculationInfo: PromiseResult =
-        await resetCalculation(serverAddresses);
+    handleBiddersIdsToast(
+      biddersIdsInfo,
+      'Successfully retrieved bidder IDs!',
+      'Failed to retrieve bidder IDs!',
+    );
 
-      toast.dismiss();
+    if (typeof biddersIdsInfo === 'string') return;
+    if (biddersIdsInfo.length < 2) return; 
 
-      handleToast(
-        resetCalculationInfo,
-        'Reset calculation success!',
-        'Reset calculation failed!',
-      );
-
-      const resetComparisonInfo = await resetComparison(serverAddresses);
-
-      handleToast(
-        resetComparisonInfo,
-        'Reset comparison success!',
-        'Reset comparison failed!',
-      );
-
-      const biddersIdsInfo = await getBiddersIds(serverAddresses);
-
-      handleBiddersIdsToast(
-        biddersIdsInfo,
-        'Successfully retrieved bidder IDs!',
-        'Failed to retrieve bidder IDs!',
-      );
-
-      if (typeof biddersIdsInfo === 'string') return;
-
-      const calculateAComparisonInfo = await calculateAComparison(
-        serverAddresses,
-        biddersIdsInfo,
-      );
-
-      handleToast(
-        calculateAComparisonInfo,
-        'Calculate A comparison success!',
-        'Calculate A comparison failed!',
-      );
-
-      const promisesReconstructInfo =
-        await promisesReconstruct(serverAddresses);
-
-      handleToast(
-        promisesReconstructInfo,
-        'Reconstruct secrets success!',
-        'Reconstruct secrets failed!',
-      );
-
-      const calculateZInfo = await calculateZ(
-        serverAddresses,
-        promisesReconstructInfo.secrets[0][1],
-      );
-
-      handleToast(
-        calculateZInfo,
-        'Calculate Z success!',
-        'Calculate Z failed!',
-      );
-
-      const popZInfo = await popZ(serverAddresses);
-
-      handleToast(popZInfo, 'Pop Z success!', 'Pop Z failed!');
-
-      await calculateFinalComparisonResult(
-        serverAddresses,
-        promisesReconstructInfo.secrets[0][1],
-      );
-
-      const recalculateFinalSecretsInfo =
-        await recalculateFinalSecrets(serverAddresses);
-
-      handleToast(
-        recalculateFinalSecretsInfo,
-        'Recalculate final secrets success!',
-        'Recalculate final secrets failed!',
-      );
-
-      const firstResult = recalculateFinalSecretsInfo.finalSecrets[0][1];
-
-      console.log('First result:', firstResult);
-
-      handleWinnerToast(recalculateFinalSecretsInfo, firstResult);
-    }
+    await performComparison(serverAddresses, biddersIdsInfo)
   };
 
   return (

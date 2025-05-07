@@ -1,4 +1,4 @@
-import type { PromiseResult, StringNumberPair } from '../interface';
+import type { PromiseResult, StringNumberPair, StringPair } from '../interface';
 
 export interface Server {
   id: string;
@@ -12,5 +12,5 @@ export interface PromiseResultWithSecrets extends PromiseResult {
 }
 
 export interface PromiseResultFinalSecrets extends PromiseResult {
-  finalSecrets: StringNumberPair[];
+  finalSecrets: StringPair[];
 }
