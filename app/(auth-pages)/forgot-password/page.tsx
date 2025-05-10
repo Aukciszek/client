@@ -1,5 +1,8 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/app/context/AuthContext';
 import { type FormEvent, useState } from 'react';
 import Form from '@/app/components/form';
 import FormField from '@/app/components/ui/formField';
@@ -7,10 +10,19 @@ import FormActions from '@/app/components/form/formActions';
 import FormInfo from '@/app/components/form/formInfo';
 import AuthFormWrapper from '@/app/components/authFormWrapper';
 
-export default function SigninPage() {
+export default function ForgotPassword() {
+  const router = useRouter();
+  const { isAuthenticated, user } = useAuth();
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    // Redirect if already authenticated based on admin status
+    if (isAuthenticated && user) {
+      router.push(user.admin ? '/admin-dashboard' : '/user-panel');
+    }
+  }, [isAuthenticated, user, router]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();

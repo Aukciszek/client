@@ -1,5 +1,5 @@
 import { toast } from 'react-toastify';
-import { k, l, PRIME_NUMBER } from '../constants';
+import { k, l, PRIME_NUMBER } from '../../constants';
 import type {
   PromiseResultFinalSecrets,
   PromiseResultWithSecrets,
@@ -9,7 +9,7 @@ import type {
   StringPair,
   PromiseResult,
   NumberPair,
-} from '../interface';
+} from '../../interface';
 
 export const sendInitialData = async (
   servers: string[],

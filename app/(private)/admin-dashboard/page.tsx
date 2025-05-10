@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Button from '../components/ui/button';
-import Footer from '../components/footer';
-import Navbar from '../components/navbar';
-import BidServerPanel from '../components/bidServerPanel';
+import Button from '../../components/ui/button';
+import Footer from '../../components/footer';
+import Navbar from '../../components/navbar';
+import BidServerPanel from '../../components/bidServerPanel';
 import { MdGavel, MdOutlineDelete, MdRestore } from 'react-icons/md';
 import type { Server } from './interface';
 import {
@@ -15,8 +15,9 @@ import {
   performComparison,
   sendInitialData,
 } from './helpers';
-import { getServerAddresses } from '../globalHelpers';
+import { getServerAddresses } from '../../globalHelpers';
 import { toast } from 'react-toastify';
+import ProtectedRoute from '../../components/ProtectedRoute';
 
 export default function AdminDashboard() {
   const [servers, setServers] = useState<Server[]>([]);
@@ -70,7 +71,7 @@ export default function AdminDashboard() {
 
     toast.loading('Starting the auction!');
     toast.dismiss();
-    
+
     const biddersIdsInfo = await getBiddersIds(serverAddresses);
 
     handleBiddersIdsToast(
@@ -80,13 +81,13 @@ export default function AdminDashboard() {
     );
 
     if (typeof biddersIdsInfo === 'string') return;
-    if (biddersIdsInfo.length < 2) return; 
+    if (biddersIdsInfo.length < 2) return;
 
-    await performComparison(serverAddresses, biddersIdsInfo)
+    await performComparison(serverAddresses, biddersIdsInfo);
   };
 
   return (
-    <>
+    <ProtectedRoute adminOnly>
       <Navbar isLogged />
       <main className='container py-6'>
         <div className='flex flex-col gap-6 items-start lg:flex-row'>
@@ -205,6 +206,6 @@ export default function AdminDashboard() {
         </div>
       </main>
       <Footer />
-    </>
+    </ProtectedRoute>
   );
 }

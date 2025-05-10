@@ -1,25 +1,27 @@
 'use client';
 
 import { useState } from 'react';
-import Button from '../components/ui/button';
-import Footer from '../components/footer';
+import Button from '../../components/ui/button';
+import Footer from '../../components/footer';
 import { LuServer } from 'react-icons/lu';
 import { IoMdRefresh, IoMdSend } from 'react-icons/io';
-import Navbar from '../components/navbar';
-import FormField from '../components/ui/formField';
-import ServerStatus from '../components/ui/serverStatus';
-import { getServerAddresses } from '../globalHelpers';
-import type { Server } from '../globalInterface';
+import Navbar from '../../components/navbar';
+import FormField from '../../components/ui/formField';
+import ServerStatus from '../../components/ui/serverStatus';
+import { getServerAddresses } from '../../globalHelpers';
+import type { Server } from '../../globalInterface';
 import { MdOutlineInfo } from 'react-icons/md';
 import { getInitialValues, handleShamir } from './helpers';
 import { toast } from 'react-toastify';
+import ProtectedRoute from '../../components/ProtectedRoute';
+import { useAuth } from '../../context/AuthContext';
 
 export default function ClientDashboard() {
+  const { user } = useAuth();
   const [masterServerAddress, setMasterServerAddress] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectedToMaster, setConnectedToMaster] = useState(false);
   const [servers, setServers] = useState<Server[]>([]);
-  const [id, setId] = useState('');
   const [bidAmount, setBidAmount] = useState('');
   const [t, setT] = useState<number>(0);
   const [n, setN] = useState<number>(0);
@@ -61,22 +63,30 @@ export default function ClientDashboard() {
       return;
     }
 
+    if (!user?.uid) {
+      toast.error('User ID not available', {
+        autoClose: false,
+        closeOnClick: true,
+        draggable: true,
+      });
+      return;
+    }
+
     await handleShamir(
       Number(bidAmount),
-      Number(id),
+      user.uid,
       t,
       n,
       getServerAddresses(servers),
     );
 
     setTimeout(() => {
-      setId('');
       setBidAmount('');
     }, 1000);
   };
 
   return (
-    <>
+    <ProtectedRoute>
       <Navbar isLogged />
       <main className='container py-6'>
         <div className='flex flex-col gap-6 items-start lg:flex-row'>
@@ -150,16 +160,16 @@ export default function ClientDashboard() {
               Submit Bid
             </h2>
             <p className='text-sm md:text-base'>
-              Enter your ID and amount to participate in the auction
+              Enter your amount to participate in the auction
             </p>
             <div className='flex flex-col gap-4 pt-6'>
               <FormField
                 id='id'
                 text='ID'
-                value={id}
-                setValue={setId}
-                placeholder='Enter your ID'
+                value={user?.uid.toString() || ''}
+                placeholder='Your ID'
                 type='text'
+                disabled
               />
               <FormField
                 id='bidAmount'
@@ -171,7 +181,7 @@ export default function ClientDashboard() {
               />
               <Button
                 variant='default'
-                disabled={!connectedToMaster || !id || !bidAmount}
+                disabled={!connectedToMaster || !user?.uid || !bidAmount}
                 style='flex justify-center items-center gap-2'
                 onClick={handleBidSubmit}
               >
@@ -188,6 +198,6 @@ export default function ClientDashboard() {
         </div>
       </main>
       <Footer />
-    </>
+    </ProtectedRoute>
   );
 }
