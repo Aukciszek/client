@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Button from '../components/ui/button';
-import Footer from '../components/footer';
-import Navbar from '../components/navbar';
-import BidServerPanel from '../components/bidServerPanel';
+import Button from '../../components/ui/button';
+import Footer from '../../components/footer';
+import Navbar from '../../components/navbar';
+import BidServerPanel from '../../components/bidServerPanel';
 import { MdGavel, MdOutlineDelete, MdRestore } from 'react-icons/md';
 import type { Server } from './interface';
 import {
@@ -15,9 +15,9 @@ import {
   performComparison,
   sendInitialData,
 } from './helpers';
-import { getServerAddresses } from '../globalHelpers';
+import { getServerAddresses } from '../../globalHelpers';
 import { toast } from 'react-toastify';
-import ProtectedRoute from '../components/ProtectedRoute';
+import ProtectedRoute from '../../components/ProtectedRoute';
 
 export default function AdminDashboard() {
   const [servers, setServers] = useState<Server[]>([]);

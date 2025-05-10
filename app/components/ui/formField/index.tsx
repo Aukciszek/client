@@ -14,6 +14,7 @@ export default function formField({
   placeholder,
   type,
   forgotPassowrd,
+  disabled = false,
 }: FormFieldProps) {
   return (
     <div className='w-full flex flex-col gap-2'>
@@ -33,10 +34,13 @@ export default function formField({
         type={type}
         placeholder={placeholder}
         value={value}
-        onChange={(e: ChangeEvent<HTMLInputElement>) =>
+        onChange={(e: ChangeEvent<HTMLInputElement>) => {
+          if (setValue === undefined) return
           setValue(e.target.value.trim())
         }
+        }
         required
+        disabled={disabled}
       />
     </div>
   );

@@ -1,25 +1,12 @@
 'use client';
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from 'react';
-import {
-  getToken,
-  removeToken,
-  setToken,
-  getUserFromToken,
-} from '../utils/auth';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { getToken, removeToken, setToken, getUserFromToken } from '../utils/auth';
 
 interface User {
-  id?: string;
-  email?: string;
-  fullName?: string;
-  role?: 'user' | 'admin';
-  [key: string]: any;
+  uid: number;
+  exp: number;
+  admin: boolean;
 }
 
 interface AuthContextType {
@@ -30,20 +17,25 @@ interface AuthContextType {
   logout: () => void;
 }
 
-const AuthContext = createContext<AuthContextType>({
+const defaultContext: AuthContextType = {
   isAuthenticated: false,
   user: null,
   loading: true,
-  login: () => {},
-  logout: () => {},
-});
+  login: (_token: string) => {
+    console.warn('AuthContext not initialized');
+  },
+  logout: () => {
+    console.warn('AuthContext not initialized');
+  },
+};
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+const AuthContext = createContext<AuthContextType>(defaultContext);
+
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in when the app loads
     const initAuth = () => {
       const token = getToken();
       if (token) {
@@ -61,7 +53,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = (token: string) => {
     setToken(token);
     const userData = getUserFromToken();
-    setUser(userData);
+    if (userData) {
+      setUser(userData);
+    }
   };
 
   const logout = () => {

@@ -7,7 +7,7 @@ type CustomInputProps = InputHTMLAttributes<HTMLInputElement> & {
 export default function Input({ style, ...props }: CustomInputProps) {
   return (
     <input
-      className={`w-full px-3 py-1.5 text-sm rounded-xl bg-primary border border-primary-border lg:px-4 lg:py-2 lg:text-base ${style}`}
+      className={`w-full px-3 py-1.5 text-sm rounded-xl bg-primary border border-primary-border lg:px-4 lg:py-2 lg:text-base disabled:opacity-50 disabled:cursor-not-allowed ${style}`}
       {...props}
     />
   );

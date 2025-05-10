@@ -1,8 +1,8 @@
 import type { SetNumber } from '@/app/interface';
 import { toast } from 'react-toastify';
 import type { Dispatch, SetStateAction } from 'react';
-import { PRIME_NUMBER } from '../constants';
-import type { Server } from '../globalInterface';
+import { PRIME_NUMBER } from '../../constants';
+import type { Server } from '../../globalInterface';
 import { areAllValuesTheSame } from '../admin-dashboard/helpers';
 
 export const getInitialValues = async (
@@ -93,7 +93,7 @@ export const handleShamir = async (
   );
 
   if (errorInfo.length !== 0 && areAllValuesTheSame(errorInfo)) {
-    toast.error(<div>Something went wrong while submitting bid</div>);
+    toast.error(<div>{errorInfo[0][1]}</div>);
     return;
   }
 

@@ -18,8 +18,8 @@ export default function ProtectedRoute({
     if (!loading) {
       if (!isAuthenticated) {
         router.push('/sign-in');
-      } else if (adminOnly && user?.role !== 'admin') {
-        router.push('/user-panel'); // Redirect non-admin users to user panel
+      } else if (adminOnly && !user?.admin) {
+        router.push('/user-panel'); // Redirect non-admin users from admin-only pages to user panel
       }
     }
   }, [isAuthenticated, loading, router, adminOnly, user]);
@@ -33,8 +33,8 @@ export default function ProtectedRoute({
     );
   }
 
-  // If not authenticated or if admin access required but user is not admin, don't render children
-  if (!isAuthenticated || (adminOnly && user?.role !== 'admin')) {
+  // If not authenticated or if admin-only page and user is not admin, don't render children
+  if (!isAuthenticated || (adminOnly && !user?.admin)) {
     return null;
   }
 
