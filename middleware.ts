@@ -1,16 +1,16 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Paths that don't require authentication
+// No authentication required
 const publicPaths = ['/privacy', '/about', '/terms'];
 
-// Auth paths that should redirect to user panel if already authenticated
+// Non-authenticated only
 const authPaths = ['/sign-in', '/sign-up', '/forgot-password'];
 
-// Paths that require admin role
+// Admin only
 const adminPaths = ['/admin-dashboard'];
 
-// Paths that require regular user (non-admin) role
+// Regular user only
 const userPaths = ['/user-panel'];
 
 export function middleware(request: NextRequest) {
@@ -19,7 +19,7 @@ export function middleware(request: NextRequest) {
   // Get auth token from cookies
   const authToken = request.cookies.get('auth_token');
 
-  // Handle root path specially
+  // Handle root path
   if (pathname === '/') {
     if (authToken?.value) {
       try {
@@ -86,7 +86,7 @@ export function middleware(request: NextRequest) {
   return NextResponse.next();
 }
 
-// Helper function to parse JWT token
+// Parse JWT token
 function parseJwt(token: string) {
   try {
     const base64Payload = token.split('.')[1];
@@ -96,17 +96,3 @@ function parseJwt(token: string) {
     return null;
   }
 }
-
-// Configure which routes should use the middleware
-export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
-    '/((?!_next/static|_next/image|favicon.ico|public).*)',
-  ],
-};
