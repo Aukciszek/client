@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { getToken, removeToken, setToken, getUserFromToken } from '../utils/auth';
+import { getToken, removeToken, setToken, getUserFromToken, setTokens, getUserFromTokens } from '../utils/auth';
 
 interface User {
   uid: number;
@@ -15,6 +15,7 @@ interface AuthContextType {
   loading: boolean;
   login: (token: string) => void;
   logout: () => void;
+  loginValidation: (token: string, tokens: string) => void;
 }
 
 const defaultContext: AuthContextType = {
@@ -25,6 +26,9 @@ const defaultContext: AuthContextType = {
     console.warn('AuthContext not initialized');
   },
   logout: () => {
+    console.warn('AuthContext not initialized');
+  },
+  loginValidation: (_token: string, _tokens: string) => {
     console.warn('AuthContext not initialized');
   },
 };
@@ -53,9 +57,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = (token: string) => {
     setToken(token);
     const userData = getUserFromToken();
+    console.log('User data from token:', userData);
     if (userData) {
       setUser(userData);
     }
+  };
+
+  const loginValidation = (token: string, tokens: string) => {
+    setTokens(token, tokens);
+    console.log('Tokens set:', token, tokens);
+    const userData = getUserFromTokens();
+    console.log('User data from tokens:', userData);
+    /* if (userData) {
+      setUser(userData);
+    } */
   };
 
   const logout = () => {
@@ -71,6 +86,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         loading,
         login,
         logout,
+        loginValidation,
       }}
     >
       {children}

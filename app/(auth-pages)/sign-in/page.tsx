@@ -10,10 +10,11 @@ import AuthFormWrapper from '@/app/components/authFormWrapper';
 import { useAuth } from '@/app/context/AuthContext';
 import { toast } from 'react-toastify';
 import { loginServer } from '@/app/constants';
+import { getTokensList } from '@/app/utils/auth';
 
 export default function SigninPage() {
   const router = useRouter();
-  const { login, isAuthenticated, user } = useAuth();
+  const { login, loginValidation, isAuthenticated, user } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -47,8 +48,14 @@ export default function SigninPage() {
       }
 
       // Login with the received token and get user data
+      console.log('Login response:', data);
       const token = data.access_tokens[0].access_token.toString();
+      const serverTokens = data.access_tokens;
+      console.log('Server tokens:', encodeURIComponent(JSON.stringify(serverTokens)), ' ', typeof JSON.stringify(serverTokens));
       login(token);
+      loginValidation(token,serverTokens);
+      console.log('Tokens list:', getTokensList());
+      console.log('User data:', user);
       
       toast.success('Login successful!');
 
@@ -95,3 +102,7 @@ export default function SigninPage() {
     </AuthFormWrapper>
   );
 }
+function loginValidation(token: any) {
+  throw new Error('Function not implemented.');
+}
+
