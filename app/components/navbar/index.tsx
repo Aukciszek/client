@@ -17,7 +17,7 @@ export default function Navbar({ isLogged }: NavbarProps) {
     router.push('/sign-in');
   };
 
-  const displayName = user?.fullName || user?.email || '';
+  const displayName = user?.uid || '';
 
   return (
     <header className='container flex h-16 items-center justify-between'>

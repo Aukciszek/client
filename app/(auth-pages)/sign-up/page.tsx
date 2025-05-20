@@ -13,7 +13,7 @@ import { loginServer } from '@/app/constants';
 
 export default function SignupPage() {
   const router = useRouter();
-  const { login, isAuthenticated, user } = useAuth();
+  const { setUserParamsFromToken, loginValidation, isAuthenticated, user } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -22,7 +22,6 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Redirect if already authenticated based on admin status
     if (isAuthenticated && user) {
       router.push(user.admin ? '/admin-dashboard' : '/user-panel');
     }
@@ -33,7 +32,7 @@ export default function SignupPage() {
     setIsLoading(true);
     setError('');
 
-    // Validate inputs
+    // Validate passwords match
     if (password !== confirmPassword) {
       setError("Passwords don't match");
       setIsLoading(false);
@@ -41,6 +40,7 @@ export default function SignupPage() {
       return;
     }
 
+    // Validate password length
     if (password.length < 6) {
       setError('Password must be at least 6 characters long');
       setIsLoading(false);
@@ -55,7 +55,7 @@ export default function SignupPage() {
           'Content-Type': 'application/json',
           Accept: 'application/json',
         },
-        body: JSON.stringify({ email, password, admin: isAdmin }),
+        body: JSON.stringify({ email, password, is_admin: isAdmin }),
       });
 
       const data = await response.json();
@@ -64,21 +64,21 @@ export default function SignupPage() {
         throw new Error(data.detail || 'Registration failed');
       }
 
-      // Login with the received token
-      const token = data.access_tokens[0].access_token.toString();
-      login(token);
-
+      // Login with the first token and store all tokens
+      const firstToken = data.access_tokens[0].access_token.toString();
+      const firstTokenData = setUserParamsFromToken(firstToken);
+      loginValidation(data.access_tokens);
+      
       toast.success('Registration successful!');
       
-      // Decode token to get user data for redirection
-      const userData = JSON.parse(atob(token.split('.')[1]));
-      router.push(userData.admin ? '/admin-dashboard' : '/user-panel');
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : 'An error occurred during registration';
+      if (!firstTokenData) {
+        throw new Error('Invalid token data');
+      }
       
+      // Redirect based on admin status
+      router.push(firstTokenData.isAdmin ? '/admin-dashboard' : '/user-panel');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred during registration';
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -135,3 +135,4 @@ export default function SignupPage() {
     </AuthFormWrapper>
   );
 }
+

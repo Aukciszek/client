@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Button from '../../components/ui/button';
 import Footer from '../../components/footer';
 import { LuServer } from 'react-icons/lu';
@@ -17,7 +17,7 @@ import ProtectedRoute from '../../components/ProtectedRoute';
 import { useAuth } from '../../context/AuthContext';
 
 export default function ClientDashboard() {
-  const { user } = useAuth();
+  const { user, servers: authServers } = useAuth();
   const [masterServerAddress, setMasterServerAddress] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectedToMaster, setConnectedToMaster] = useState(false);
@@ -26,26 +26,47 @@ export default function ClientDashboard() {
   const [t, setT] = useState<number>(0);
   const [n, setN] = useState<number>(0);
 
+  // Initialize available servers from auth context
+  useEffect(() => {
+    const initialServers = authServers.map(server => ({
+      id: server,
+      name: server,
+      address: server,
+      status: 'offline' as const
+    }));
+    setServers(initialServers);
+  }, [authServers]);
+
   const connectToMasterServer = async () => {
+    if (!masterServerAddress) return;
+
     setIsConnecting(true);
-
-    await getInitialValues(setT, setN, setServers, masterServerAddress);
-
-    setConnectedToMaster(true);
-    setIsConnecting(false);
+    try {
+      await getInitialValues(setT, setN, setServers, masterServerAddress);
+      setConnectedToMaster(true);
+    } catch {
+      setConnectedToMaster(false);
+    } finally {
+      setIsConnecting(false);
+    }
   };
 
   const refreshServerList = async () => {
     if (!connectedToMaster) return;
 
+    // Simulate server check with delay
+    setServers(prev => prev.map(server => ({
+      ...server,
+      status: 'offline'
+    })));
+
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    setServers(
-      servers.map((server) => ({
-        ...server,
-        lastSynced: new Date().toISOString(),
-      })),
-    );
+    // Update status for connected master server and its known parties
+    setServers(prev => prev.map(server => ({
+      ...server,
+      status: server.address === masterServerAddress ? 'online' : server.status
+    })));
   };
 
   const handleBidSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -95,19 +116,29 @@ export default function ClientDashboard() {
               Server Connection
             </h2>
             <p className='text-sm md:text-base'>
-              Connect to a master server to retrieve information about all
-              available auction servers
+              Select a server to connect to from the available auction servers
             </p>
             <div className='pt-6'>
               <div className='w-full flex justify-between items-end gap-4'>
-                <FormField
-                  id='masterServer'
-                  text='Master server'
-                  value={masterServerAddress}
-                  setValue={setMasterServerAddress}
-                  placeholder='https://master-server.example.com'
-                  type='text'
-                />
+                <div className='w-full'>
+                  <label htmlFor='masterServer' className='block text-sm font-medium text-gray-700'>
+                    Master server
+                  </label>
+                  <select
+                    id='masterServer'
+                    value={masterServerAddress}
+                    onChange={(e) => setMasterServerAddress(e.target.value)}
+                    className='mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
+                    disabled={isConnecting || connectedToMaster}
+                  >
+                    <option value="">Select a server...</option>
+                    {authServers.map((server) => (
+                      <option key={server} value={server}>
+                        {server}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <Button
                   variant='default'
                   onClick={connectToMasterServer}

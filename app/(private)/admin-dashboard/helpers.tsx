@@ -1,5 +1,6 @@
 import { toast } from 'react-toastify';
 import { k, l, PRIME_NUMBER } from '../../constants';
+import { getTokenForServer } from '../../utils/auth';
 import type {
   PromiseResultFinalSecrets,
   PromiseResultWithSecrets,
@@ -13,10 +14,7 @@ import type {
 
 export const sendInitialData = async (
   servers: string[],
-  formData: FormData,
 ): Promise<void> => {
-  const t = Number(formData.get('t'));
-  const n = Number(formData.get('n'));
   const messageInfo: StringPair[] = [];
   const errorInfo: StringPair[] = [];
 
@@ -27,13 +25,11 @@ export const sendInitialData = async (
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
+          Authorization: `Bearer ${getTokenForServer(server)}`,
         },
         body: JSON.stringify({
-          t,
-          n,
           id: i + 1,
           p: PRIME_NUMBER,
-          parties: servers,
         }),
       })
         .then(async (res) => {
@@ -77,6 +73,7 @@ export const reset = async (
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
+          Authorization: `Bearer ${getTokenForServer(server)}`,
         },
       })
         .then(async (res) => {
@@ -134,6 +131,7 @@ export const hardReset = async (
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
+          Authorization: `Bearer ${getTokenForServer(server)}`,
         },
       })
         .then(async (res) => {
@@ -216,6 +214,7 @@ export const getBiddersIds = async (
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
+          Authorization: `Bearer ${getTokenForServer(server)}`,
         },
       })
         .then(async (res) => {
@@ -252,6 +251,7 @@ export const resetCalculation = async (
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
+          Authorization: `Bearer ${getTokenForServer(server)}`,
         },
       })
         .then(async (res) => {
@@ -284,6 +284,7 @@ export const resetComparison = async (
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
+          Authorization: `Bearer ${getTokenForServer(server)}`,
         },
       })
         .then(async (res) => {
@@ -311,12 +312,13 @@ export const calculateAComparison = async (
   const errorInfo: StringPair[] = [];
 
   await Promise.all(
-    servers.map((server) =>
+    servers.map((server, index) =>
       fetch(`${server}/api/calculate-a-comparison`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
+          Authorization: `Bearer ${getTokenForServer(server)}`,
         },
         body: JSON.stringify({
           first_client_id: biddersIds[0],
@@ -354,6 +356,7 @@ export const promisesReconstruct = async (
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
+          Authorization: `Bearer ${getTokenForServer(server)}`,
         },
       })
         .then(async (res) => {
@@ -388,6 +391,7 @@ export const calculateZ = async (
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
+          Authorization: `Bearer ${getTokenForServer(server)}`,
         },
         body: JSON.stringify({
           opened_a: openedA,
@@ -426,6 +430,7 @@ export const popZ = async (servers: string[]): Promise<PromiseResult> => {
           headers: {
             'Content-Type': 'application/json',
             Accept: 'application/json',
+            Authorization: `Bearer ${getTokenForServer(server)}`,
           },
         })
           .then(async (res) => {
@@ -460,6 +465,7 @@ export const recalculateFinalSecrets = async (
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
+          Authorization: `Bearer ${getTokenForServer(server)}`,
         },
       })
         .then(async (res) => {
@@ -495,6 +501,7 @@ export const xor = async (
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
+          Authorization: `Bearer ${getTokenForServer(party)}`,
         },
       }),
     );
@@ -509,6 +516,7 @@ export const xor = async (
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
+          Authorization: `Bearer ${getTokenForServer(party)}`,
         },
         body: JSON.stringify({
           take_value_from_temporary_zZ: take_value_from_temporary_zZ,
@@ -533,6 +541,7 @@ export const xor = async (
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
+          Authorization: `Bearer ${getTokenForServer(party)}`,
         },
         body: JSON.stringify({
           calculate_for_xor: true,
@@ -554,6 +563,7 @@ export const xor = async (
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
+          Authorization: `Bearer ${getTokenForServer(party)}`,
         },
         body: JSON.stringify({
           take_value_from_temporary_zZ: take_value_from_temporary_zZ,
@@ -573,6 +583,7 @@ export const xor = async (
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
+          Authorization: `Bearer ${getTokenForServer(party)}`,
         },
       }),
     );
@@ -590,6 +601,7 @@ export async function calculateFinalComparisonResult(
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        Authorization: `Bearer ${getTokenForServer(party)}`,
       },
     })
       .then(async (res) => {
@@ -610,6 +622,7 @@ export async function calculateFinalComparisonResult(
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        Authorization: `Bearer ${getTokenForServer(party)}`,
       },
     })
       .then(async (res) => {
@@ -630,6 +643,7 @@ export async function calculateFinalComparisonResult(
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        Authorization: `Bearer ${getTokenForServer(party)}`,
       },
       body: JSON.stringify({
         calculate_final_comparison_result: true,
@@ -656,6 +670,7 @@ export async function calculateFinalComparisonResult(
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        Authorization: `Bearer ${getTokenForServer(party)}`,
       },
       body: JSON.stringify({
         calculate_for_xor: true,
@@ -683,6 +698,7 @@ export async function calculateFinalComparisonResult(
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        Authorization: `Bearer ${getTokenForServer(party)}`,
       },
       body: JSON.stringify({
         opened_a: openedA,
@@ -720,6 +736,7 @@ export const romb = async (serverAdresses: string[]) => {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        Authorization: `Bearer ${getTokenForServer(server)}`,
       },
     })
       .then(async (res) => {
@@ -741,6 +758,7 @@ export const romb = async (serverAdresses: string[]) => {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        Authorization: `Bearer ${getTokenForServer(server)}`,
       },
     })
       .then(async (res) => {
@@ -763,6 +781,7 @@ export const romb = async (serverAdresses: string[]) => {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        Authorization: `Bearer ${getTokenForServer(server)}`,
       },
       body: JSON.stringify({
         take_value_from_temporary_zZ: false,
@@ -792,6 +811,7 @@ export const romb = async (serverAdresses: string[]) => {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        Authorization: `Bearer ${getTokenForServer(server)}`,
       },
       body: JSON.stringify({
         set_in_temporary_zZ_index: 0,
@@ -821,6 +841,7 @@ export const romb = async (serverAdresses: string[]) => {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        Authorization: `Bearer ${getTokenForServer(server)}`,
       },
     })
       .then(async (res) => {
@@ -847,6 +868,7 @@ export const romb = async (serverAdresses: string[]) => {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        Authorization: `Bearer ${getTokenForServer(server)}`,
       },
     })
       .then(async (res) => {
@@ -869,6 +891,7 @@ export const romb = async (serverAdresses: string[]) => {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        Authorization: `Bearer ${getTokenForServer(server)}`,
       },
       body: JSON.stringify({
         take_value_from_temporary_zZ: true,
@@ -900,6 +923,7 @@ export const romb = async (serverAdresses: string[]) => {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        Authorization: `Bearer ${getTokenForServer(server)}`,
       },
       body: JSON.stringify({
         set_in_temporary_zZ_index: 1,
@@ -929,6 +953,7 @@ export const romb = async (serverAdresses: string[]) => {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
+        Authorization: `Bearer ${getTokenForServer(server)}`,
       },
     })
       .then(async (res) => {

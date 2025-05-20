@@ -4,6 +4,8 @@ import type { Dispatch, SetStateAction } from 'react';
 import { PRIME_NUMBER } from '../../constants';
 import type { Server } from '../../globalInterface';
 import { areAllValuesTheSame } from '../admin-dashboard/helpers';
+import { getTokenForServer, getServersList } from '../../utils/auth';
+import Cookies from 'universal-cookie';
 
 export const getInitialValues = async (
   setT: SetNumber,
@@ -12,45 +14,61 @@ export const getInitialValues = async (
   initialValuesServer: string,
 ): Promise<void> => {
   const messageInfo: string[] = [];
-  const errorInfo: string[] = [];
-  await fetch(`${initialValuesServer}/api/initial-values`)
-    .then(async (res) => {
-      const data = await res.json();
-      if (!res.ok) {
-        toast.error(data.detail);
-      } else {
-        setT(data.t);
-        setN(data.n);
-        const servers = data.parties.map((party: string) => {
-          return {
-            id: party,
-            name: party,
-            address: party,
-            status: 'online',
-          };
-        });
-        setServers(servers);
+  
+  // Log the server we're trying to get a token for
+  console.log('Requesting token for server:', initialValuesServer);
+  const token = getTokenForServer(initialValuesServer);
+  
+  if (!token) {
+    console.error('No token found in cookies for server:', initialValuesServer);
+    const cookies = new Cookies();
+    const allTokens = cookies.get('access_tokens');
+    console.log('All available tokens:', allTokens);
+    toast.error('Authentication token not found. Please try logging in again.');
+    return;
+  }
 
-        messageInfo.push(data.result);
-      }
-    })
-    .catch((err) => {
-      errorInfo.push(err.message);
+  await fetch(`${initialValuesServer}/api/initial-values`, {
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  }).then(async (res) => {
+    const data = await res.json();
+    if (!res.ok) {
+      toast.error(data.detail);
+      setT(0);
+      setN(0);
+      setServers([]);
+      throw new Error(data.detail);
+    }
+    
+    setT(data.t);
+    setN(data.n);
+    // Get the current auth servers list to properly map server addresses
+    const authServers = getServersList();
+    const availableServers = data.parties.map((party: string) => {
+      // Try to find matching server from auth context to get the proper name
+      const matchingAuthServer = authServers.find(server => server === party);
+      return {
+        id: party,
+        name: matchingAuthServer || party,
+        address: party,
+        status: 'online'
+      };
     });
-
-  if (errorInfo.length !== 0 && areAllTheSame(errorInfo)) {
-    toast.error(
-      <div>Something went wrong while retrieving server addresses</div>,
-    );
-    return;
-  }
-
-  if (messageInfo.length !== 0 && areAllTheSame(messageInfo)) {
-    toast.success(<div>Successfully retrieved server addresses</div>);
-    return;
-  }
-
-  toast.error(<div>Something went wrong while submitting bid</div>);
+    setServers(availableServers);
+    messageInfo.push(data.result);
+    toast.success('Successfully retrieved server addresses');
+  }).catch((err) => {
+    const error = err.message;
+    toast.error(error);
+    setT(0);
+    setN(0);
+    setServers([]);
+    throw err;
+  });
 };
 
 export const handleShamir = async (
@@ -72,6 +90,7 @@ export const handleShamir = async (
         headers: {
           'content-type': 'application/json',
           Accept: 'application/json',
+          Authorization: `Bearer ${getTokenForServer(server)}`,
         },
         body: JSON.stringify({
           client_id: id,
@@ -118,10 +137,8 @@ export function shamir(
   coefficients[0] = k0;
 
   if (coefficients[coefficients.length - 1] === BigInt(0)) {
-    coefficients[coefficients.length - 1] = getSecureRandomInt(
-      BigInt(1),
-      p - BigInt(1),
-    );
+    const lastIndex = coefficients.length - 1;
+    coefficients[lastIndex] = getSecureRandomInt(BigInt(1), p - BigInt(1));
   }
 
   const shares: Array<[number, bigint]> = [];
@@ -198,6 +215,7 @@ export const handleMultiplication = async (
       headers: {
         'content-type': 'application/json',
         Accept: 'application/json',
+        Authorization: `Bearer ${getTokenForServer(server)}`,
       },
     })
       .then(async (res) => {
@@ -248,6 +266,7 @@ export const handleMultiplication = async (
       headers: {
         'content-type': 'application/json',
         Accept: 'application/json',
+        Authorization: `Bearer ${getTokenForServer(server)}`,
       },
       body: JSON.stringify({
         first_client_id: firstClientId,
@@ -302,6 +321,7 @@ export const handleMultiplication = async (
       headers: {
         'content-type': 'application/json',
         Accept: 'application/json',
+        Authorization: `Bearer ${getTokenForServer(server)}`,
       },
     })
       .then(async (res) => {
@@ -351,6 +371,7 @@ export const handleMultiplication = async (
       headers: {
         'content-type': 'application/json',
         Accept: 'application/json',
+        Authorization: `Bearer ${getTokenForServer(server)}`,
       },
     })
       .then(async (res) => {
