@@ -13,7 +13,8 @@ import { loginServer } from '@/app/constants';
 
 export default function SignupPage() {
   const router = useRouter();
-  const { setUserParamsFromToken, loginValidation, isAuthenticated, user } = useAuth();
+  const { setUserParamsFromToken, loginValidation, isAuthenticated, user } =
+    useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -59,7 +60,7 @@ export default function SignupPage() {
       });
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.detail || 'Registration failed');
       }
@@ -68,17 +69,20 @@ export default function SignupPage() {
       const firstToken = data.access_tokens[0].access_token.toString();
       const firstTokenData = setUserParamsFromToken(firstToken);
       loginValidation(data.access_tokens);
-      
+
       toast.success('Registration successful!');
-      
+
       if (!firstTokenData) {
         throw new Error('Invalid token data');
       }
-      
+
       // Redirect based on admin status
       router.push(firstTokenData.isAdmin ? '/admin-dashboard' : '/user-panel');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An error occurred during registration';
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : 'An error occurred during registration';
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -135,4 +139,3 @@ export default function SignupPage() {
     </AuthFormWrapper>
   );
 }
-

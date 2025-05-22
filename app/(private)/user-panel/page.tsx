@@ -28,11 +28,11 @@ export default function ClientDashboard() {
 
   // Initialize available servers from auth context
   useEffect(() => {
-    const initialServers = authServers.map(server => ({
+    const initialServers = authServers.map((server) => ({
       id: server,
       name: server,
       address: server,
-      status: 'offline' as const
+      status: 'offline' as const,
     }));
     setServers(initialServers);
   }, [authServers]);
@@ -55,18 +55,23 @@ export default function ClientDashboard() {
     if (!connectedToMaster) return;
 
     // Simulate server check with delay
-    setServers(prev => prev.map(server => ({
-      ...server,
-      status: 'offline'
-    })));
+    setServers((prev) =>
+      prev.map((server) => ({
+        ...server,
+        status: 'offline',
+      })),
+    );
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // Update status for connected master server and its known parties
-    setServers(prev => prev.map(server => ({
-      ...server,
-      status: server.address === masterServerAddress ? 'online' : server.status
-    })));
+    setServers((prev) =>
+      prev.map((server) => ({
+        ...server,
+        status:
+          server.address === masterServerAddress ? 'online' : server.status,
+      })),
+    );
   };
 
   const handleBidSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -121,7 +126,10 @@ export default function ClientDashboard() {
             <div className='pt-6'>
               <div className='w-full flex justify-between items-end gap-4'>
                 <div className='w-full'>
-                  <label htmlFor='masterServer' className='block text-sm font-medium text-gray-700'>
+                  <label
+                    htmlFor='masterServer'
+                    className='block text-sm font-medium text-gray-700'
+                  >
                     Master server
                   </label>
                   <select
@@ -131,7 +139,7 @@ export default function ClientDashboard() {
                     className='mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500'
                     disabled={isConnecting || connectedToMaster}
                   >
-                    <option value="">Select a server...</option>
+                    <option value=''>Select a server...</option>
                     {authServers.map((server) => (
                       <option key={server} value={server}>
                         {server}

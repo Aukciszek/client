@@ -14,11 +14,11 @@ export const getInitialValues = async (
   initialValuesServer: string,
 ): Promise<void> => {
   const messageInfo: string[] = [];
-  
+
   // Log the server we're trying to get a token for
   console.log('Requesting token for server:', initialValuesServer);
   const token = getTokenForServer(initialValuesServer);
-  
+
   if (!token) {
     console.error('No token found in cookies for server:', initialValuesServer);
     const cookies = new Cookies();
@@ -34,41 +34,45 @@ export const getInitialValues = async (
       Accept: 'application/json',
       Authorization: `Bearer ${token}`,
     },
-  }).then(async (res) => {
-    const data = await res.json();
-    if (!res.ok) {
-      toast.error(data.detail);
+  })
+    .then(async (res) => {
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.detail);
+        setT(0);
+        setN(0);
+        setServers([]);
+        throw new Error(data.detail);
+      }
+
+      setT(data.t);
+      setN(data.n);
+      // Get the current auth servers list to properly map server addresses
+      const authServers = getServersList();
+      const availableServers = data.parties.map((party: string) => {
+        // Try to find matching server from auth context to get the proper name
+        const matchingAuthServer = authServers.find(
+          (server) => server === party,
+        );
+        return {
+          id: party,
+          name: matchingAuthServer || party,
+          address: party,
+          status: 'online',
+        };
+      });
+      setServers(availableServers);
+      messageInfo.push(data.result);
+      toast.success('Successfully retrieved server addresses');
+    })
+    .catch((err) => {
+      const error = err.message;
+      toast.error(error);
       setT(0);
       setN(0);
       setServers([]);
-      throw new Error(data.detail);
-    }
-    
-    setT(data.t);
-    setN(data.n);
-    // Get the current auth servers list to properly map server addresses
-    const authServers = getServersList();
-    const availableServers = data.parties.map((party: string) => {
-      // Try to find matching server from auth context to get the proper name
-      const matchingAuthServer = authServers.find(server => server === party);
-      return {
-        id: party,
-        name: matchingAuthServer || party,
-        address: party,
-        status: 'online'
-      };
+      throw err;
     });
-    setServers(availableServers);
-    messageInfo.push(data.result);
-    toast.success('Successfully retrieved server addresses');
-  }).catch((err) => {
-    const error = err.message;
-    toast.error(error);
-    setT(0);
-    setN(0);
-    setServers([]);
-    throw err;
-  });
 };
 
 export const handleShamir = async (

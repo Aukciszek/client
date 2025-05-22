@@ -16,7 +16,7 @@ const userPaths = ['/user-panel'];
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   console.log('Current pathname:', pathname);
-  
+
   // Get auth token from cookies
   const authToken = request.cookies.get('access_token');
   console.log('Auth token present:', !!authToken?.value);
@@ -28,7 +28,9 @@ export function middleware(request: NextRequest) {
     if (authToken?.value) {
       try {
         const payload = parseJwt(authToken.value);
-        const targetPath = payload?.admin ? '/admin-dashboard' : '/user-panel';
+        const targetPath = payload?.isAdmin
+          ? '/admin-dashboard'
+          : '/user-panel';
         const redirectUrl = new URL(targetPath, request.url);
         return NextResponse.redirect(redirectUrl);
       } catch (error) {
@@ -44,8 +46,12 @@ export function middleware(request: NextRequest) {
     console.log('Authenticated user attempting to access auth page:', pathname);
     try {
       const payload = parseJwt(authToken.value);
-      const targetPath = payload?.admin ? '/admin-dashboard' : '/user-panel';
-      console.log('Auth page redirect:', { from: pathname, to: targetPath, isAdmin: payload?.admin });
+      const targetPath = payload?.isAdmin ? '/admin-dashboard' : '/user-panel';
+      console.log('Auth page redirect:', {
+        from: pathname,
+        to: targetPath,
+        isAdmin: payload?.isAdmin,
+      });
       const redirectUrl = new URL(targetPath, request.url);
       return NextResponse.redirect(redirectUrl);
     } catch (error) {
@@ -61,8 +67,15 @@ export function middleware(request: NextRequest) {
   }
 
   // If no token and trying to access protected route, redirect to login
-  if (!authToken?.value && !publicPaths.includes(pathname) && !authPaths.includes(pathname)) {
-    console.log('Unauthorized access attempt:', { path: pathname, redirectingTo: '/sign-in' });
+  if (
+    !authToken?.value &&
+    !publicPaths.includes(pathname) &&
+    !authPaths.includes(pathname)
+  ) {
+    console.log('Unauthorized access attempt:', {
+      path: pathname,
+      redirectingTo: '/sign-in',
+    });
     const signInUrl = new URL('/sign-in', request.url);
     return NextResponse.redirect(signInUrl);
   }
@@ -71,22 +84,31 @@ export function middleware(request: NextRequest) {
   if (authToken?.value) {
     try {
       const payload = parseJwt(authToken.value);
-      
+
       // Prevent admin users from accessing user panel
-      if (userPaths.includes(pathname) && payload?.admin) {
-        console.log('Admin attempted to access user path:', { path: pathname, redirectingTo: '/admin-dashboard' });
+      if (userPaths.includes(pathname) && payload?.isAdmin) {
+        console.log('Admin attempted to access user path:', {
+          path: pathname,
+          redirectingTo: '/admin-dashboard',
+        });
         const adminDashboardUrl = new URL('/admin-dashboard', request.url);
         return NextResponse.redirect(adminDashboardUrl);
       }
 
       // Prevent regular users from accessing admin routes
-      if (adminPaths.includes(pathname) && !payload?.admin) {
-        console.log('Regular user attempted to access admin path:', { path: pathname, redirectingTo: '/user-panel' });
+      if (adminPaths.includes(pathname) && !payload?.isAdmin) {
+        console.log('Regular user attempted to access admin path:', {
+          path: pathname,
+          redirectingTo: '/user-panel',
+        });
         const userPanelUrl = new URL('/user-panel', request.url);
         return NextResponse.redirect(userPanelUrl);
       }
 
-      console.log('Access granted to protected path:', { path: pathname, userRole: payload?.admin ? 'admin' : 'user' });
+      console.log('Access granted to protected path:', {
+        path: pathname,
+        userRole: payload?.isAdmin ? 'admin' : 'user',
+      });
     } catch (error) {
       console.log('Error verifying user access:', { path: pathname, error });
       const signInUrl = new URL('/sign-in', request.url);

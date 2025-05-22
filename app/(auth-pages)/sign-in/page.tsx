@@ -13,7 +13,8 @@ import { loginServer } from '@/app/constants';
 
 export default function SigninPage() {
   const router = useRouter();
-  const { setUserParamsFromToken, loginValidation, isAuthenticated, user } = useAuth();
+  const { setUserParamsFromToken, loginValidation, isAuthenticated, user } =
+    useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -41,7 +42,7 @@ export default function SigninPage() {
 
       const data = await response.json();
 
-      if (!response.ok) { 
+      if (!response.ok) {
         throw new Error(data.detail || 'Invalid credentials');
       }
 
@@ -49,9 +50,9 @@ export default function SigninPage() {
       const firstToken = data.access_tokens[0].access_token.toString();
       const firstTokenData = setUserParamsFromToken(firstToken);
       loginValidation(data.access_tokens);
-    
+
       toast.success('Login successful!');
-      
+
       if (!firstTokenData) {
         throw new Error('Invalid token data');
       }
@@ -97,4 +98,3 @@ export default function SigninPage() {
     </AuthFormWrapper>
   );
 }
-

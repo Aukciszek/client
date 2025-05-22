@@ -1,4 +1,8 @@
-import type { PromiseResult, StringNumberPair, StringPair } from '../../interface';
+import type {
+  PromiseResult,
+  StringNumberPair,
+  StringPair,
+} from '../../interface';
 
 export interface Server {
   id: string;

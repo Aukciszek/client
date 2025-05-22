@@ -35,10 +35,9 @@ export default function formField({
         placeholder={placeholder}
         value={value}
         onChange={(e: ChangeEvent<HTMLInputElement>) => {
-          if (setValue === undefined) return
-          setValue(e.target.value.trim())
-        }
-        }
+          if (setValue === undefined) return;
+          setValue(e.target.value.trim());
+        }}
         required
         disabled={disabled}
       />

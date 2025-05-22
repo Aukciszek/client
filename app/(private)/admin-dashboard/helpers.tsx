@@ -12,9 +12,7 @@ import type {
   NumberPair,
 } from '../../interface';
 
-export const sendInitialData = async (
-  servers: string[],
-): Promise<void> => {
+export const sendInitialData = async (servers: string[]): Promise<void> => {
   const messageInfo: StringPair[] = [];
   const errorInfo: StringPair[] = [];
 
@@ -1083,8 +1081,7 @@ export const performComparison = async (
       'Calculate A comparison failed!',
     );
 
-    const promisesReconstructInfo =
-      await promisesReconstruct(serverAddresses);
+    const promisesReconstructInfo = await promisesReconstruct(serverAddresses);
 
     handleToast(
       promisesReconstructInfo,
@@ -1097,16 +1094,12 @@ export const performComparison = async (
       promisesReconstructInfo.secrets[0][1],
     );
 
-    handleToast(
-      calculateZInfo,
-      'Calculate Z success!',
-      'Calculate Z failed!',
-    );
+    handleToast(calculateZInfo, 'Calculate Z success!', 'Calculate Z failed!');
 
     const popZInfo = await popZ(serverAddresses);
 
     handleToast(popZInfo, 'Pop Z success!', 'Pop Z failed!');
-    
+
     await calculateFinalComparisonResult(
       serverAddresses,
       promisesReconstructInfo.secrets[0][1],
@@ -1120,12 +1113,12 @@ export const performComparison = async (
       'Recalculate final secrets success!',
       'Recalculate final secrets failed!',
     );
-    
+
     const firstResult = recalculateFinalSecretsInfo.finalSecrets[0][1];
-    
+
     if (parseInt(firstResult, 16) === 0) currentWinner = currentContender;
   }
-  
+
   if (recalculateFinalSecretsInfo === undefined) return;
   handleWinnerToast(recalculateFinalSecretsInfo, currentWinner);
-}
+};

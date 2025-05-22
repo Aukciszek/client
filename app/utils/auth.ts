@@ -1,4 +1,4 @@
-import Cookies from "universal-cookie";
+import Cookies from 'universal-cookie';
 
 // Define interfaces for token structure
 interface TokenInfo {
@@ -18,13 +18,13 @@ let serversList: string[] = [];
 // Set cookie with token
 export const setToken = (token: string): void => {
   const cookies = new Cookies();
-  cookies.set('access_token', token, {path: '/', maxAge: 2592000}); // 30 days
+  cookies.set('access_token', token, { path: '/', maxAge: 2592000 }); // 30 days
 };
 
 // Set cookie with token list
 export const setTokens = (tokens: TokenInfo[]): void => {
   const cookies = new Cookies();
-  cookies.set('access_tokens', tokens, {path: '/', maxAge: 2592000}); // 30 days
+  cookies.set('access_tokens', tokens, { path: '/', maxAge: 2592000 }); // 30 days
 };
 
 // Get token from cookies
@@ -60,7 +60,7 @@ export const isAuthenticated = (): boolean => {
 // Enhance token parsing with better error handling
 export const parseToken = (token: string | null): DecodedToken | null => {
   if (!token) return null;
-  
+
   try {
     const parts = token.split('.');
     if (parts.length !== 3) return null;
@@ -69,7 +69,7 @@ export const parseToken = (token: string | null): DecodedToken | null => {
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const jsonPayload = window.atob(base64);
     const payload = JSON.parse(jsonPayload);
-    
+
     return payload;
   } catch {
     return null;
@@ -87,7 +87,9 @@ export const parseTokensList = (token: string | null): DecodedToken | null => {
   }
 };
 
-export const verifyAuthTokens = (access_tokens: string | null): DecodedToken | null => {
+export const verifyAuthTokens = (
+  access_tokens: string | null,
+): DecodedToken | null => {
   if (!access_tokens) return null;
   try {
     const base64Url = access_tokens.split('.')[1];
@@ -134,7 +136,7 @@ export const readToken = (token: string | null): DecodedToken | null => {
       decodedPayload
         .split('')
         .map((char) => '%' + ('00' + char.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
+        .join(''),
     );
 
     return JSON.parse(jsonPayload);
@@ -144,7 +146,9 @@ export const readToken = (token: string | null): DecodedToken | null => {
 };
 
 // Parse tokens list and extract servers
-export const parseTokensListAndServers = (tokens: TokenInfo[]): { decodedFirstToken: DecodedToken | null; servers: string[] } => {
+export const parseTokensListAndServers = (
+  tokens: TokenInfo[],
+): { decodedFirstToken: DecodedToken | null; servers: string[] } => {
   try {
     if (!Array.isArray(tokens)) {
       throw new Error('Invalid tokens format: expected an array');
@@ -178,12 +182,13 @@ export const parseTokensListAndServers = (tokens: TokenInfo[]): { decodedFirstTo
     if (!decodedFirstToken) {
       throw new Error('Failed to decode first token');
     }
-    
+
     // Store servers list for future use
     serversList = servers;
-    
+
     return { decodedFirstToken, servers };
-  } catch {
+  } catch (error) {
+    console.error('Error parsing tokens list:', error);
     throw new Error('Failed to parse tokens list and extract servers');
   }
 };
@@ -198,7 +203,7 @@ export const getTokenForServer = (server: string): string | null => {
   try {
     const cookies = new Cookies();
     const tokens = cookies.get('access_tokens');
-    
+
     if (!tokens || !Array.isArray(tokens)) return null;
 
     // Normalize URLs by removing trailing slashes and converting to lowercase
@@ -215,13 +220,13 @@ export const getTokenForServer = (server: string): string | null => {
     };
 
     const normalizedServer = normalizeUrl(server);
-    
+
     const tokenInfo = tokens.find((token: TokenInfo) => {
       if (typeof token !== 'object' || !token.server) return false;
       const normalizedTokenServer = normalizeUrl(token.server);
       return normalizedTokenServer === normalizedServer;
     });
-    
+
     return tokenInfo?.access_token ?? null;
   } catch {
     return null;

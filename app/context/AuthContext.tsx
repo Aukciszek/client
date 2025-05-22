@@ -102,7 +102,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw new Error('Invalid tokens format or empty array');
       }
 
-      const { decodedFirstToken, servers: serverList } = parseTokensListAndServers(tokens);
+      const { decodedFirstToken, servers: serverList } =
+        parseTokensListAndServers(tokens);
 
       if (!decodedFirstToken) {
         throw new Error('Failed to decode first token');
@@ -116,7 +117,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setServers(serverList);
       setTokens(tokens);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to validate login';
+      const message =
+        error instanceof Error ? error.message : 'Failed to validate login';
       throw new Error(message);
     }
   };
