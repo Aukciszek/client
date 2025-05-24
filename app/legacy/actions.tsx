@@ -13,7 +13,7 @@ export const sendInitialData = async (
   const messageError: [string, string][] = [];
 
   const promises = servers.map((server, i) =>
-    fetch(`${server}/api/initial-values`, {
+    fetch(`${server}api/initial-values`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

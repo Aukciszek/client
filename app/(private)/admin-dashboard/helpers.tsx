@@ -18,7 +18,7 @@ export const sendInitialData = async (servers: string[]): Promise<void> => {
 
   await Promise.all(
     servers.map((server, i) =>
-      fetch(`${server}/api/initial-values`, {
+      fetch(`${server}api/initial-values`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -66,7 +66,7 @@ export const reset = async (
 
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}/api/reset`, {
+      fetch(`${server}api/reset`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -124,7 +124,7 @@ export const hardReset = async (
 
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}/api/factory-reset`, {
+      fetch(`${server}api/factory-reset`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -207,7 +207,7 @@ export const getBiddersIds = async (
 
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}/api/get-bidders`, {
+      fetch(`${server}api/get-bidders`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -244,7 +244,7 @@ export const resetCalculation = async (
 
   await Promise.all(
     servers.map((server: string) =>
-      fetch(`${server}/api/reset-calculation`, {
+      fetch(`${server}api/reset-calculation`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -277,7 +277,7 @@ export const resetComparison = async (
 
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}/api/reset-comparison`, {
+      fetch(`${server}api/reset-comparison`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -311,7 +311,7 @@ export const calculateAComparison = async (
 
   await Promise.all(
     servers.map((server, index) =>
-      fetch(`${server}/api/calculate-a-comparison`, {
+      fetch(`${server}api/calculate-a-comparison`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -349,7 +349,7 @@ export const promisesReconstruct = async (
 
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}/api/reconstruct-secret`, {
+      fetch(`${server}api/reconstruct-secret`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -384,7 +384,7 @@ export const calculateZ = async (
 
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}/api/calculate-z-comparison`, {
+      fetch(`${server}api/calculate-z-comparison`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -423,7 +423,7 @@ export const popZ = async (servers: string[]): Promise<PromiseResult> => {
 
     await Promise.all(
       servers.map((server) =>
-        fetch(`${server}/api/pop-zZ`, {
+        fetch(`${server}api/pop-zZ`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -458,7 +458,7 @@ export const recalculateFinalSecrets = async (
 
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}/api/reconstruct-secret`, {
+      fetch(`${server}api/reconstruct-secret`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -729,7 +729,7 @@ export const romb = async (serverAdresses: string[]) => {
   let Multishares = [];
 
   const taskRomb1 = serverAdresses.map((server) =>
-    fetch(`${server}/api/reset-calculation`, {
+    fetch(`${server}api/reset-calculation`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -751,7 +751,7 @@ export const romb = async (serverAdresses: string[]) => {
   await Promise.all(taskRomb1);
 
   const taskRomb2 = serverAdresses.map((server) =>
-    fetch(`${server}/api/redistribute-q`, {
+    fetch(`${server}api/redistribute-q`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -774,7 +774,7 @@ export const romb = async (serverAdresses: string[]) => {
   await Promise.all(taskRomb2);
 
   const taskRomb3 = serverAdresses.map((server) =>
-    fetch(`${server}/api/redistribute-r`, {
+    fetch(`${server}api/redistribute-r`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -804,7 +804,7 @@ export const romb = async (serverAdresses: string[]) => {
   await Promise.all(taskRomb3);
 
   const taskRomb4 = serverAdresses.map((server) =>
-    fetch(`${server}/api/calculate-multiplicative-share`, {
+    fetch(`${server}api/calculate-multiplicative-share`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -834,7 +834,7 @@ export const romb = async (serverAdresses: string[]) => {
   await Promise.all(taskRomb4);
 
   const taskRomb5 = serverAdresses.map((server) =>
-    fetch(`${server}/api/reset-calculation`, {
+    fetch(`${server}api/reset-calculation`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -861,7 +861,7 @@ export const romb = async (serverAdresses: string[]) => {
   Rs = [];
 
   const taskRomb6 = serverAdresses.map((server) =>
-    fetch(`${server}/api/redistribute-q`, {
+    fetch(`${server}api/redistribute-q`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -884,7 +884,7 @@ export const romb = async (serverAdresses: string[]) => {
   await Promise.all(taskRomb6);
 
   const taskRomb7 = serverAdresses.map((server) =>
-    fetch(`${server}/api/redistribute-r`, {
+    fetch(`${server}api/redistribute-r`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -916,7 +916,7 @@ export const romb = async (serverAdresses: string[]) => {
   Multishares = [];
 
   const taskRomb8 = serverAdresses.map((server) =>
-    fetch(`${server}/api/calculate-multiplicative-share`, {
+    fetch(`${server}api/calculate-multiplicative-share`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -946,7 +946,7 @@ export const romb = async (serverAdresses: string[]) => {
   await Promise.all(taskRomb8);
 
   const taskRomb9 = serverAdresses.map((server) =>
-    fetch(`${server}/api/reset-calculation`, {
+    fetch(`${server}api/reset-calculation`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

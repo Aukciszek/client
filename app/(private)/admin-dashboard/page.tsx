@@ -4,16 +4,13 @@ import { useEffect, useState } from 'react';
 import Button from '../../components/ui/button';
 import Footer from '../../components/footer';
 import Navbar from '../../components/navbar';
-import BidServerPanel from '../../components/bidServerPanel';
-import { MdGavel, MdOutlineDelete, MdOutlineRefresh, MdRestore } from 'react-icons/md';
+import { MdGavel, MdOutlineRefresh, MdRestore } from 'react-icons/md';
 import type { Server } from './interface';
 import {
   getBiddersIds,
-  getRandomString,
   handleBiddersIdsToast,
   hardReset,
   performComparison,
-  sendInitialData,
 } from './helpers';
 import { getInitialValues, getServerAddresses, handleAllServersStatus, handleCheckStatus } from '../../globalHelpers';
 import { toast } from 'react-toastify';
@@ -26,24 +23,8 @@ export default function AdminDashboard() {
   const [masterServerAddress, setMasterServerAddress] = useState('');
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectedToMaster, setConnectedToMaster] = useState(false);
-  const [serverName, setServerName] = useState('');
-  const [serverAddress, setServerAddress] = useState('');
   const [t, setT] = useState<number>(0);
   const [n, setN] = useState<number>(0);
-
-  const sendInitialDataWithServers = sendInitialData.bind(
-    null,
-    getServerAddresses(servers),
-  );
-
-  const handleRemoveServer = (id: string) => {
-    setServers(servers.filter((server) => server.id !== id));
-    toast.success('Server removed successfully!', {
-      autoClose: 5000,
-      closeOnClick: true,
-      draggable: true,
-    });
-  };
 
   const handleClearData = () => {
     setT(0);
