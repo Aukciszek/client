@@ -1,7 +1,7 @@
 import { toast } from 'react-toastify';
 import { PRIME_NUMBER } from '../../constants';
 import { areAllValuesTheSame } from '../admin-dashboard/helpers';
-import { getTokenForServer, getServersList } from '../../utils/auth';
+import { getTokenForServer } from '../../utils/auth';
 
 export const handleShamir = async (
   secret: number,
@@ -17,7 +17,7 @@ export const handleShamir = async (
 
   await Promise.all(
     servers.map((server, i) =>
-      fetch(`${server}api/set-shares`, {
+      fetch(`${server}api/set-client-shares`, {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
@@ -25,7 +25,6 @@ export const handleShamir = async (
           Authorization: `Bearer ${getTokenForServer(server)}`,
         },
         body: JSON.stringify({
-          client_id: id,
           share: shares[i][1].toString(16),
         }),
       })
@@ -305,6 +304,9 @@ export const handleMultiplication = async (
         Accept: 'application/json',
         Authorization: `Bearer ${getTokenForServer(server)}`,
       },
+      body: JSON.stringify({
+        share_to_reconstruct: 'comparison_a',
+      }),
     })
       .then(async (res) => {
         const data = await res.json();

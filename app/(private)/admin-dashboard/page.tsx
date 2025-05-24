@@ -100,33 +100,10 @@ export default function AdminDashboard() {
     );
 
     if (typeof biddersIdsInfo === 'string') return;
-    if (biddersIdsInfo.length < 2) return;
 
     await performComparison(serverAddresses, biddersIdsInfo);
   };
 
-  const refreshServerList = async () => {
-    if (!connectedToMaster) return;
-
-    // Simulate server check with delay
-    setServers((prev) =>
-      prev.map((server) => ({
-        ...server,
-        status: 'offline',
-      })),
-    );
-
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Update status for connected master server and its known parties
-    setServers((prev) =>
-      prev.map((server) => ({
-        ...server,
-        status:
-          server.address === masterServerAddress ? 'online' : server.status,
-      })),
-    );
-  };
 
   return (
     <ProtectedRoute adminOnly>
