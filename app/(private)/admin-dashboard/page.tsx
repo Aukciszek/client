@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Button from '../../components/ui/button';
 import Footer from '../../components/footer';
 import Navbar from '../../components/navbar';
@@ -32,6 +32,59 @@ export default function AdminDashboard() {
     setServers([]);
   };
 
+  
+  const connectToMasterServer = useCallback(async () => {
+    if (!masterServerAddress) return;
+
+    setIsConnecting(true);
+    try {
+      await getInitialValues(setT, setN, setServers, masterServerAddress);
+      setConnectedToMaster(true);
+    } catch {
+      setConnectedToMaster(false);
+    } finally {
+      setIsConnecting(false);
+    }
+  }, [masterServerAddress]);
+
+  // Initialize available servers from auth context
+  useEffect(() => {
+    let cleanupServerChecks: (() => void) | undefined;
+
+    if (user?.admin && authServers.length > 0) {
+      const initialServers: Server[] = authServers.map((server) => ({
+        id: server,
+        name: server,
+        address: server,
+        status: 'offline' as const,
+      }));
+      setServers(initialServers);
+      setMasterServerAddress(authServers[0] || '');
+      
+      // Start server status checks
+      cleanupServerChecks = handleAllServersStatus(initialServers, setServers);
+    } else {
+      // Clear state if user logs out or loses admin status
+      setServers([]);
+      setMasterServerAddress('');
+      setConnectedToMaster(false);
+    }
+
+    // Cleanup function will be called when component unmounts or user logs out
+    return () => {
+      if (cleanupServerChecks) {
+        cleanupServerChecks();
+      }
+    };
+  }, [user, authServers]);
+
+  // Handle master server connection
+  useEffect(() => {
+    if (masterServerAddress && !connectedToMaster) {
+      void connectToMasterServer();
+    }
+  }, [masterServerAddress, connectedToMaster, connectToMasterServer]);
+
   const handleStartAuction = async () => {
     const serverAddresses = getServerAddresses(servers);
 
@@ -52,66 +105,28 @@ export default function AdminDashboard() {
     await performComparison(serverAddresses, biddersIdsInfo);
   };
 
-  // Initialize available servers from auth context
-  useEffect(() => {
-    const initialServers: Server[] = authServers.map((server) => ({
-      id: server,
-      name: server,
-      address: server,
-      status: 'offline' as const,
-    }));
-    setServers(initialServers);
-    handleAllServersStatus( initialServers, setServers);
-  }, [authServers]);
+  const refreshServerList = async () => {
+    if (!connectedToMaster) return;
 
-  useEffect(() => {
-    if (user && user.admin) {
-      setMasterServerAddress(authServers[0] || '');
-    }
+    // Simulate server check with delay
+    setServers((prev) =>
+      prev.map((server) => ({
+        ...server,
+        status: 'offline',
+      })),
+    );
 
-    if (!masterServerAddress) {
-      connectToMasterServer();
-      refreshServerList();
-    }
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  }, [user, authServers, masterServerAddress]);
-
-  const connectToMasterServer = async () => {
-      if (!masterServerAddress) return;
-  
-      setIsConnecting(true);
-      try {
-        await getInitialValues(setT, setN, setServers, masterServerAddress);
-        setConnectedToMaster(true);
-      } catch {
-        setConnectedToMaster(false);
-      } finally {
-        setIsConnecting(false);
-      }
-    };
-  
-    const refreshServerList = async () => {
-      if (!connectedToMaster) return;
-  
-      // Simulate server check with delay
-      setServers((prev) =>
-        prev.map((server) => ({
-          ...server,
-          status: 'offline',
-        })),
-      );
-  
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-  
-      // Update status for connected master server and its known parties
-      setServers((prev) =>
-        prev.map((server) => ({
-          ...server,
-          status:
-            server.address === masterServerAddress ? 'online' : server.status,
-        })),
-      );
-    };
+    // Update status for connected master server and its known parties
+    setServers((prev) =>
+      prev.map((server) => ({
+        ...server,
+        status:
+          server.address === masterServerAddress ? 'online' : server.status,
+      })),
+    );
+  };
 
   return (
     <ProtectedRoute adminOnly>

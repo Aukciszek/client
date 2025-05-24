@@ -24,7 +24,9 @@ export default function ClientDashboard() {
 
   // Initialize available servers from auth context and check their status
   useEffect(() => {
-    if (authServers.length > 0) {
+    let cleanupServerChecks: (() => void) | undefined;
+    
+    if (authServers.length > 0 && user) {
       const initialServers: Server[] = authServers.map((server) => ({
         id: server,
         name: server,
@@ -32,16 +34,21 @@ export default function ClientDashboard() {
         status: 'offline' as const,
       }));
       setServers(initialServers);
-      handleAllServersStatus(initialServers, setServers);
       
-      // Try to get initial values from the first server
-      /* getInitialValues(setT, setN, setServers, authServers[0])
-        .catch(() => {
-          // Silently fail if we can't get initial values
-          toast.info('Waiting for servers to be initialized...');
-        }); */
+      // Start server status checks
+      cleanupServerChecks = handleAllServersStatus(initialServers, setServers);
+    } else {
+      // Clear servers if user logs out
+      setServers([]);
     }
-  }, [authServers]);
+
+    // Cleanup function will be called when component unmounts or user logs out
+    return () => {
+      if (cleanupServerChecks) {
+        cleanupServerChecks();
+      }
+    };
+  }, [authServers, user]);
 
   const refreshServerList = () => {
     if (servers.length > 0) {
