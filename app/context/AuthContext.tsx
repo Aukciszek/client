@@ -17,6 +17,17 @@ interface User {
   admin: boolean;
 }
 
+interface DecodedToken {
+  uid: number;
+  isAdmin: boolean;
+  exp: number;
+}
+
+interface TokenInfo {
+  access_token: string; // Changed from token to access_token to match auth.ts
+  server: string;
+}
+
 interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
@@ -40,17 +51,6 @@ const defaultContext: AuthContextType = {
   logout: operation_undefined,
   loginValidation: operation_undefined,
 };
-
-interface DecodedToken {
-  uid: number;
-  isAdmin: boolean;
-  exp: number;
-}
-
-interface TokenInfo {
-  access_token: string; // Changed from token to access_token to match auth.ts
-  server: string;
-}
 
 const AuthContext = createContext<AuthContextType>(defaultContext);
 

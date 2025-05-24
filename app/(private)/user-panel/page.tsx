@@ -8,13 +8,13 @@ import { IoMdRefresh, IoMdSend } from 'react-icons/io';
 import Navbar from '../../components/navbar';
 import FormField from '../../components/ui/formField';
 import ServerStatus from '../../components/ui/serverStatus';
-import { getServerAddresses } from '../../globalHelpers';
+import { getInitialValues, getServerAddresses } from '../../globalHelpers';
 import type { Server } from '../../globalInterface';
 import { MdOutlineInfo } from 'react-icons/md';
-import { getInitialValues, handleShamir } from './helpers';
+import { handleShamir } from './helpers';
 import { toast } from 'react-toastify';
 import ProtectedRoute from '../../components/ProtectedRoute';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '@/app/context/AuthContext';
 
 export default function ClientDashboard() {
   const { user, servers: authServers } = useAuth();

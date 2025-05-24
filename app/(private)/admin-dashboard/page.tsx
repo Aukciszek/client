@@ -5,7 +5,7 @@ import Button from '../../components/ui/button';
 import Footer from '../../components/footer';
 import Navbar from '../../components/navbar';
 import BidServerPanel from '../../components/bidServerPanel';
-import { MdGavel, MdOutlineDelete, MdRestore } from 'react-icons/md';
+import { MdGavel, MdOutlineDelete, MdOutlineRefresh, MdRestore } from 'react-icons/md';
 import type { Server } from './interface';
 import {
   getBiddersIds,
@@ -15,36 +15,21 @@ import {
   performComparison,
   sendInitialData,
 } from './helpers';
-import { getServerAddresses } from '../../globalHelpers';
+import { getInitialValues, getServerAddresses, handleAllServersStatus, handleCheckStatus } from '../../globalHelpers';
 import { toast } from 'react-toastify';
 import ProtectedRoute from '../../components/ProtectedRoute';
+import { useAuth } from '@/app/context/AuthContext';
 
 export default function AdminDashboard() {
+  const { user, servers: authServers } = useAuth();
   const [servers, setServers] = useState<Server[]>([]);
-
+  const [masterServerAddress, setMasterServerAddress] = useState('');
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [connectedToMaster, setConnectedToMaster] = useState(false);
   const [serverName, setServerName] = useState('');
   const [serverAddress, setServerAddress] = useState('');
-  const [t, setT] = useState('');
-  const [n, setN] = useState('');
-
-  const handleAddServer = () => {
-    setServers([
-      ...servers,
-      {
-        id: getRandomString(),
-        name: serverName,
-        address: serverAddress,
-        status: 'online',
-      },
-    ]);
-    toast.success('Server added successfully!', {
-      autoClose: 5000,
-      closeOnClick: true,
-      draggable: true,
-    });
-    setServerName('');
-    setServerAddress('');
-  };
+  const [t, setT] = useState<number>(0);
+  const [n, setN] = useState<number>(0);
 
   const sendInitialDataWithServers = sendInitialData.bind(
     null,
@@ -61,8 +46,8 @@ export default function AdminDashboard() {
   };
 
   const handleClearData = () => {
-    setT('0');
-    setN('0');
+    setT(0);
+    setN(0);
     setServers([]);
   };
 
@@ -86,36 +71,72 @@ export default function AdminDashboard() {
     await performComparison(serverAddresses, biddersIdsInfo);
   };
 
+  // Initialize available servers from auth context
+  useEffect(() => {
+    const initialServers: Server[] = authServers.map((server) => ({
+      id: server,
+      name: server,
+      address: server,
+      status: 'offline' as const,
+    }));
+    setServers(initialServers);
+    handleAllServersStatus( initialServers, setServers);
+  }, [authServers]);
+
+  useEffect(() => {
+    if (user && user.admin) {
+      setMasterServerAddress(authServers[0] || '');
+    }
+
+    if (!masterServerAddress) {
+      connectToMasterServer();
+      refreshServerList();
+    }
+
+  }, [user, authServers, masterServerAddress]);
+
+  const connectToMasterServer = async () => {
+      if (!masterServerAddress) return;
+  
+      setIsConnecting(true);
+      try {
+        await getInitialValues(setT, setN, setServers, masterServerAddress);
+        setConnectedToMaster(true);
+      } catch {
+        setConnectedToMaster(false);
+      } finally {
+        setIsConnecting(false);
+      }
+    };
+  
+    const refreshServerList = async () => {
+      if (!connectedToMaster) return;
+  
+      // Simulate server check with delay
+      setServers((prev) =>
+        prev.map((server) => ({
+          ...server,
+          status: 'offline',
+        })),
+      );
+  
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+  
+      // Update status for connected master server and its known parties
+      setServers((prev) =>
+        prev.map((server) => ({
+          ...server,
+          status:
+            server.address === masterServerAddress ? 'online' : server.status,
+        })),
+      );
+    };
+
   return (
     <ProtectedRoute adminOnly>
       <Navbar isLogged />
       <main className='container py-6'>
         <div className='flex flex-col gap-6 items-start lg:flex-row'>
-          <div className='w-full flex flex-col gap-6 lg:w-1/2'>
-            <BidServerPanel
-              headline='Add new server'
-              description='Add a new server to the auction network'
-              firstValue={serverName}
-              setFirstValue={setServerName}
-              secondValue={serverAddress}
-              setSecondValue={setServerAddress}
-              onSubmit={handleAddServer}
-              isDisabled={!serverName || !serverAddress}
-              isAdmin
-            />
-            <BidServerPanel
-              headline='Set initial values'
-              description='Set the initial values for the auction'
-              firstValue={t}
-              setFirstValue={setT}
-              secondValue={n}
-              setSecondValue={setN}
-              onSubmit={sendInitialDataWithServers}
-              isDisabled={!t || !n}
-              initialValues
-              isAdmin
-            />
-          </div>
           <div className='w-full flex flex-col gap-6 lg:w-1/2'>
             <div className='w-full bg-secondary border border-primary-border p-6 rounded-xl shadow-sm'>
               <h2 className='text-xl font-bold tracking-wide font-headline lg:text-2xl'>
@@ -190,9 +211,12 @@ export default function AdminDashboard() {
                           <td className='basis-2/10 flex justify-center sm:basis-1/10'>
                             <Button
                               variant='ghost'
-                              onClick={() => handleRemoveServer(server.id)}
+                              onClick={() => handleCheckStatus(server.id, servers, setServers)}
+                              disabled={server.status === 'checking'}
                             >
-                              <MdOutlineDelete className='h-4 w-4' />
+                              <MdOutlineRefresh 
+                              className={`h-4 w-4 ${server.status === 'checking' ? 'animate-spin' : ''}`} 
+                              />
                             </Button>
                           </td>
                         </tr>
