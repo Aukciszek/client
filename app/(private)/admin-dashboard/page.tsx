@@ -163,8 +163,8 @@ export default function AdminDashboard() {
                   <table>
                     <thead>
                       <tr className='flex justify-around rounded-t-xl bg-emerald-100'>
-                        <th className='basis-3/10 sm:basis-2/10'>Name</th>
-                        <th className='basis-3/10 sm:basis-5/10'>Address</th>
+                        <th className='basis-3/10 sm:basis-3/10'>Name</th>
+                        <th className='basis-3/10 sm:basis-4/10'>Address</th>
                         <th className='basis-2/10 sm:basis-2/10'>Status</th>
                         <th className='basis-2/10 sm:basis-1/10'>Action</th>
                       </tr>
@@ -172,10 +172,10 @@ export default function AdminDashboard() {
                     <tbody>
                       {servers.map((server) => (
                         <tr key={server.id} className='flex items-center'>
-                          <td className='basis-3/10 sm:basis-2/10'>
+                          <td className='basis-3/10 sm:basis-3/10'>
                             {server.name}
                           </td>
-                          <td className='basis-3/10 text-center sm:basis-5/10'>
+                          <td className='basis-3/10 text-center sm:basis-4/10'>
                             {server.address}
                           </td>
                           <td className='basis-2/10 sm:basis-2/10'>

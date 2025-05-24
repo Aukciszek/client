@@ -28,7 +28,11 @@ export const getInitialValues = async (
     return;
   }
 
-  await fetch(`${initialValuesServer}/api/initial-values`, {
+  // Ensure URL is properly formatted with trailing slash
+  const serverUrl = initialValuesServer.endsWith('/') ? initialValuesServer : `${initialValuesServer}/`;
+  console.log('Making request to:', `${serverUrl}api/initial-values`);
+  
+  await fetch(`${serverUrl}api/initial-values`, {
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',
@@ -79,22 +83,23 @@ export const checkServerStatus = async (
   server: string,
 ): Promise<boolean> => {
   try {
-    const response = await fetch(`${server}api/status`, {
+    const serverUrl = server.endsWith('/') ? server : `${server}/`;
+    await fetch(`${serverUrl}api/status`, {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
         Authorization: `Bearer ${getTokenForServer(server)}`,
       },
     });
-    return response.ok;
+    // If we got any response (even an error response), consider the server online
+    return true;
   } catch {
+    // Only network-level errors indicate the server is offline
     return false;
   }
 };
 
-// Replace handleRemoveServer with:
-export const handleCheckStatus = async (id: string, servers: Server[], setServers: Dispatch<SetStateAction<Server[]>>) => {
-  
+export const handleCheckStatus = async (id: string, servers: Server[], setServers: Dispatch<SetStateAction<Server[]>>): Promise<void> => {
   const server = servers.find(s => s.id === id);
   if (!server) return;
 
@@ -121,12 +126,11 @@ export const handleCheckStatus = async (id: string, servers: Server[], setServer
   });
 };
 
-export const handleAllServersStatus = async (
+export const handleAllServersStatus = (
   servers: Server[],
   setServers: Dispatch<SetStateAction<Server[]>>,
-) => {
-  servers.map((server) => {
-      handleCheckStatus(server.id, servers, setServers);
-  }
-  );
+): void => {
+  servers.forEach((server) => {
+    handleCheckStatus(server.id, servers, setServers);
+  });
 };
