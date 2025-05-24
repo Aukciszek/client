@@ -133,9 +133,9 @@ export default function ClientDashboard() {
                           <td className='basis-2/10 sm:basis-2/10'>
                             <div
                               className={`w-min mx-auto rounded-full px-2 py-1 text-xs lg:text-sm lg:px-3 lg:py-1.5 ${
-                                server.status === 'online'
-                                  ? 'bg-green-100 text-green-800'
-                                  : 'bg-red-100 text-red-800'
+                                server.status === 'online' ? 'bg-green-100 text-green-800' :
+                                server.status === 'checking' ? 'bg-amber-100 text-amber-800' :
+                                'bg-red-100 text-red-800'
                               }`}
                             >
                               {server.status}

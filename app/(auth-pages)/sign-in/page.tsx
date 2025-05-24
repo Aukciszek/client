@@ -9,7 +9,7 @@ import FormInfo from '@/app/components/form/formInfo';
 import AuthFormWrapper from '@/app/components/authFormWrapper';
 import { useAuth } from '@/app/context/AuthContext';
 import { toast } from 'react-toastify';
-import { loginServer } from '@/app/constants';
+import { LOGIN_SERVER } from '@/app/constants';
 
 export default function SigninPage() {
   const router = useRouter();
@@ -32,7 +32,7 @@ export default function SigninPage() {
     setError('');
 
     try {
-      const response = await fetch(`${loginServer}/api/auth/login`, {
+      const response = await fetch(`${LOGIN_SERVER}api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -9,7 +9,7 @@ import FormInfo from '@/app/components/form/formInfo';
 import AuthFormWrapper from '@/app/components/authFormWrapper';
 import { useAuth } from '@/app/context/AuthContext';
 import { toast } from 'react-toastify';
-import { loginServer } from '@/app/constants';
+import { LOGIN_SERVER } from '@/app/constants';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -50,7 +50,7 @@ export default function SignupPage() {
     }
 
     try {
-      const response = await fetch(`${loginServer}/api/auth/register`, {
+      const response = await fetch(`${LOGIN_SERVER}api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

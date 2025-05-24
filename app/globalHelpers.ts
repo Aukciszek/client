@@ -3,6 +3,7 @@ import { getServersList, getTokenForServer } from './utils/auth';
 import { toast } from 'react-toastify';
 import { Server, SetNumber } from './globalInterface';
 import { Dispatch, SetStateAction } from 'react';
+import { REFRESH_INTERVAL } from './constants';
 
 export const getServerAddresses = (servers: Server[]): string[] =>
   servers.map((server) => server.address);
@@ -84,17 +85,27 @@ export const checkServerStatus = async (
 ): Promise<boolean> => {
   try {
     const serverUrl = server.endsWith('/') ? server : `${server}/`;
-    await fetch(`${serverUrl}api/status`, {
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        Authorization: `Bearer ${getTokenForServer(server)}`,
-      },
-    });
-    // If we got any response (even an error response), consider the server online
-    return true;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REFRESH_INTERVAL); // 10 second timeout
+
+    try {
+      await fetch(`${serverUrl}api/status`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          Authorization: `Bearer ${getTokenForServer(server)}`,
+        },
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      return true;
+    } catch (error: unknown) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        // Request was aborted due to timeout
+      }
+      return false;
+    }
   } catch {
-    // Only network-level errors indicate the server is offline
     return false;
   }
 };
@@ -119,18 +130,25 @@ export const handleCheckStatus = async (id: string, servers: Server[], setServer
       : s
   ));
 
-  toast.info(`Server ${server.name} is ${isOnline ? 'online' : 'offline'}`, {
-    autoClose: 3000,
-    closeOnClick: true,
-    draggable: true,
-  });
+  
 };
 
 export const handleAllServersStatus = (
   servers: Server[],
   setServers: Dispatch<SetStateAction<Server[]>>,
-): void => {
+): () => void => {
+  // Check status immediately
   servers.forEach((server) => {
     handleCheckStatus(server.id, servers, setServers);
   });
+
+  // Set up automatic refresh every 10 seconds
+  const intervalId = setInterval(() => {
+    servers.forEach((server) => {
+      handleCheckStatus(server.id, servers, setServers);
+    });
+  }, REFRESH_INTERVAL);
+
+  // Return cleanup function to clear the interval
+  return () => clearInterval(intervalId);
 };
