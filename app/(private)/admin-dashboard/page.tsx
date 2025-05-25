@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import Button from '../../components/ui/button';
 import Footer from '../../components/footer';
 import Navbar from '../../components/navbar';
-import { MdGavel, MdOutlineRefresh, MdRestore } from 'react-icons/md';
+import { MdCloudUpload, MdGavel, MdOutlineRefresh, MdRestore } from 'react-icons/md';
 import type { Server } from './interface';
 import {
   getBiddersIds,
@@ -140,7 +140,7 @@ export default function AdminDashboard() {
                       onClick={() => handleSendInitialData()}
                     >
                       Send initial values
-                      <MdRestore className='h-4 w-4' />
+                      <MdCloudUpload className='h-4 w-4' />
                     </Button>
                   </li>
                 </ul>
