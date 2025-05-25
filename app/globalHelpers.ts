@@ -1,8 +1,8 @@
 import Cookies from 'universal-cookie';
 import { getServersList, getTokenForServer } from './utils/auth';
 import { toast } from 'react-toastify';
-import { Server, SetNumber } from './globalInterface';
-import { Dispatch, SetStateAction } from 'react';
+import type { Server, SetNumber } from './globalInterface';
+import type { Dispatch, SetStateAction } from 'react';
 import { REFRESH_INTERVAL } from './constants';
 
 export const getServerAddresses = (servers: Server[]): string[] =>
@@ -30,9 +30,11 @@ export const getInitialValues = async (
   }
 
   // Ensure URL is properly formatted with trailing slash
-  const serverUrl = initialValuesServer.endsWith('/') ? initialValuesServer : `${initialValuesServer}/`;
+  const serverUrl = initialValuesServer.endsWith('/')
+    ? initialValuesServer
+    : `${initialValuesServer}/`;
   console.log('Making request to:', `${serverUrl}api/initial-values`);
-  
+
   await fetch(`${serverUrl}api/initial-values`, {
     headers: {
       'Content-Type': 'application/json',
@@ -80,9 +82,7 @@ export const getInitialValues = async (
     });
 };
 
-export const checkServerStatus = async (
-  server: string,
-): Promise<boolean> => {
+export const checkServerStatus = async (server: string): Promise<boolean> => {
   try {
     const serverUrl = server.endsWith('/') ? server : `${server}/`;
     const controller = new AbortController();
@@ -110,33 +110,33 @@ export const checkServerStatus = async (
   }
 };
 
-export const handleCheckStatus = async (id: string, servers: Server[], setServers: Dispatch<SetStateAction<Server[]>>): Promise<void> => {
-  const server = servers.find(s => s.id === id);
+export const handleCheckStatus = async (
+  id: string,
+  servers: Server[],
+  setServers: Dispatch<SetStateAction<Server[]>>,
+): Promise<void> => {
+  const server = servers.find((s) => s.id === id);
   if (!server) return;
 
   // Show loading state for this specific server
-  setServers(prev => prev.map(s => 
-    s.id === id 
-      ? { ...s, status: 'checking' as const }
-      : s
-  ));
+  setServers((prev) =>
+    prev.map((s) => (s.id === id ? { ...s, status: 'checking' } : s)),
+  );
 
   const isOnline = await checkServerStatus(server.address);
 
   // Update status for just this server
-  setServers(prev => prev.map(s => 
-    s.id === id 
-      ? { ...s, status: isOnline ? 'online' : 'offline' as const }
-      : s
-  ));
-
-  
+  setServers((prev) =>
+    prev.map((s) =>
+      s.id === id ? { ...s, status: isOnline ? 'online' : 'offline' } : s,
+    ),
+  );
 };
 
 export const handleAllServersStatus = (
   servers: Server[],
   setServers: Dispatch<SetStateAction<Server[]>>,
-): () => void => {
+): (() => void) => {
   // Check status immediately
   servers.forEach((server) => {
     handleCheckStatus(server.id, servers, setServers);

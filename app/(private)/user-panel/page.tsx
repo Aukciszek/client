@@ -6,8 +6,11 @@ import Footer from '../../components/footer';
 import { IoMdRefresh, IoMdSend } from 'react-icons/io';
 import Navbar from '../../components/navbar';
 import FormField from '../../components/ui/formField';
-import ServerStatus from '../../components/ui/serverStatus';
-import { getInitialValues, getServerAddresses, handleAllServersStatus, handleCheckStatus } from '../../globalHelpers';
+import {
+  getServerAddresses,
+  handleAllServersStatus,
+  handleCheckStatus,
+} from '../../globalHelpers';
 import type { Server } from '../../globalInterface';
 import { MdOutlineInfo, MdOutlineRefresh } from 'react-icons/md';
 import { handleShamir } from './helpers';
@@ -19,22 +22,20 @@ export default function ClientDashboard() {
   const { user, servers: authServers } = useAuth();
   const [servers, setServers] = useState<Server[]>([]);
   const [bidAmount, setBidAmount] = useState('');
-  const [t, setT] = useState<number>(0);
-  const [n, setN] = useState<number>(0);
 
   // Initialize available servers from auth context and check their status
   useEffect(() => {
     let cleanupServerChecks: (() => void) | undefined;
-    
+
     if (authServers.length > 0 && user) {
       const initialServers: Server[] = authServers.map((server) => ({
         id: server,
         name: server,
         address: server,
-        status: 'offline' as const,
+        status: 'offline',
       }));
       setServers(initialServers);
-      
+
       // Start server status checks
       cleanupServerChecks = handleAllServersStatus(initialServers, setServers);
     } else {
@@ -80,13 +81,10 @@ export default function ClientDashboard() {
       return;
     }
 
-    await handleShamir(
-      Number(bidAmount),
-      user.uid,
-      t,
-      n,
-      getServerAddresses(servers),
-    );
+    const n = servers.length;
+    const t = Math.floor(n / 2);
+
+    await handleShamir(Number(bidAmount), t, n, getServerAddresses(servers));
 
     setTimeout(() => {
       setBidAmount('');
@@ -102,74 +100,80 @@ export default function ClientDashboard() {
             <h2 className='text-xl font-bold tracking-wide font-headline lg:text-2xl'>
               Available Servers
             </h2>
-            <p className='text-sm md:text-base'>
-              Status of auction servers
-            </p>
+            <p className='text-sm md:text-base'>Status of auction servers</p>
             <div className='pt-6'>
               <div className='w-full'>
-              {servers.length > 0 ? (
-                <>
-                  <div className='flex items-center justify-between mt-6 mb-4'>
-                    <Button
-                      variant='outline'
-                      onClick={refreshServerList}
-                      style='flex items-center gap-2'
-                    >
-                      <IoMdRefresh className='h-4 w-4' />
-                      Check Status
-                    </Button>
-                  </div>
-                  <table>
-                    <thead>
-                      <tr className='flex justify-around rounded-t-xl bg-emerald-100'>
-                        <th className='basis-3/10 sm:basis-3/10'>Name</th>
-                        <th className='basis-3/10 sm:basis-4/10'>Address</th>
-                        <th className='basis-2/10 sm:basis-2/10'>Status</th>
-                        <th className='basis-2/10 sm:basis-1/10'>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {servers.map((server) => (
-                        <tr key={server.id} className='flex items-center'>
-                          <td className='basis-3/10 sm:basis-3/10'>
-                            {server.name}
-                          </td>
-                          <td className='basis-3/10 text-center sm:basis-4/10'>
-                            {server.address}
-                          </td>
-                          <td className='basis-2/10 sm:basis-2/10'>
-                            <div
-                              className={`w-min mx-auto rounded-full px-2 py-1 text-xs lg:text-sm lg:px-3 lg:py-1.5 ${
-                                server.status === 'online' ? 'bg-green-100 text-green-800' :
-                                server.status === 'checking' ? 'bg-amber-100 text-amber-800' :
-                                'bg-red-100 text-red-800'
-                              }`}
-                            >
-                              {server.status}
-                            </div>
-                          </td>
-                          <td className='basis-2/10 flex justify-center sm:basis-1/10'>
-                            <Button
-                              variant='ghost'
-                              onClick={() => handleCheckStatus(server.id, servers, setServers)}
-                              disabled={server.status === 'checking'}
-                            >
-                              <MdOutlineRefresh 
-                              className={`h-4 w-4 ${server.status === 'checking' ? 'animate-spin' : ''}`} 
-                              />
-                            </Button>
-                          </td>
+                {servers.length > 0 ? (
+                  <>
+                    <div className='flex items-center justify-between mt-6 mb-4'>
+                      <Button
+                        variant='outline'
+                        onClick={refreshServerList}
+                        style='flex items-center gap-2'
+                      >
+                        <IoMdRefresh className='h-4 w-4' />
+                        Check Status
+                      </Button>
+                    </div>
+                    <table>
+                      <thead>
+                        <tr className='flex justify-around rounded-t-xl bg-emerald-100'>
+                          <th className='basis-3/10 sm:basis-3/10'>Name</th>
+                          <th className='basis-3/10 sm:basis-4/10'>Address</th>
+                          <th className='basis-2/10 sm:basis-2/10'>Status</th>
+                          <th className='basis-2/10 sm:basis-1/10'>Action</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </>
-              ) : (
-                <div className='flex items-center gap-2 mt-4 px-4 py-2 text-sm rounded-xl bg-teal-100'>
-                  <MdOutlineInfo className='h-4 w-4' />
-                  No servers available
-                </div>
-              )}
+                      </thead>
+                      <tbody>
+                        {servers.map((server) => (
+                          <tr key={server.id} className='flex items-center'>
+                            <td className='basis-3/10 sm:basis-3/10'>
+                              {server.name}
+                            </td>
+                            <td className='basis-3/10 text-center sm:basis-4/10'>
+                              {server.address}
+                            </td>
+                            <td className='basis-2/10 sm:basis-2/10'>
+                              <div
+                                className={`w-min mx-auto rounded-full px-2 py-1 text-xs lg:text-sm lg:px-3 lg:py-1.5 ${
+                                  server.status === 'online'
+                                    ? 'bg-green-100 text-green-800'
+                                    : server.status === 'checking'
+                                      ? 'bg-amber-100 text-amber-800'
+                                      : 'bg-red-100 text-red-800'
+                                }`}
+                              >
+                                {server.status}
+                              </div>
+                            </td>
+                            <td className='basis-2/10 flex justify-center sm:basis-1/10'>
+                              <Button
+                                variant='ghost'
+                                onClick={() =>
+                                  handleCheckStatus(
+                                    server.id,
+                                    servers,
+                                    setServers,
+                                  )
+                                }
+                                disabled={server.status === 'checking'}
+                              >
+                                <MdOutlineRefresh
+                                  className={`h-4 w-4 ${server.status === 'checking' ? 'animate-spin' : ''}`}
+                                />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </>
+                ) : (
+                  <div className='flex items-center gap-2 mt-4 px-4 py-2 text-sm rounded-xl bg-teal-100'>
+                    <MdOutlineInfo className='h-4 w-4' />
+                    No servers available
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -199,14 +203,18 @@ export default function ClientDashboard() {
               />
               <Button
                 variant='default'
-                disabled={!servers.some(s => s.status === 'online') || !user?.uid || !bidAmount}
+                disabled={
+                  !servers.some((s) => s.status === 'online') ||
+                  !user?.uid ||
+                  !bidAmount
+                }
                 style='flex justify-center items-center gap-2'
                 onClick={handleBidSubmit}
               >
                 Submit Bid <IoMdSend className='h-4 w-4' />
               </Button>
             </div>
-            {!servers.some(s => s.status === 'online') && (
+            {!servers.some((s) => s.status === 'online') && (
               <div className='flex items-center gap-2 mt-4 px-4 py-2 text-xs rounded-xl bg-teal-100 lg:text-sm'>
                 <MdOutlineInfo className='h-4 w-4' />
                 Waiting for servers to be online...

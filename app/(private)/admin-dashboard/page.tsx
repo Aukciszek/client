@@ -11,18 +11,52 @@ import {
   handleBiddersIdsToast,
   hardReset,
   performComparison,
+  sendInitialData,
 } from './helpers';
-import { getInitialValues, getServerAddresses, handleAllServersStatus, handleCheckStatus } from '../../globalHelpers';
+import {
+  getInitialValues,
+  getServerAddresses,
+  handleAllServersStatus,
+  handleCheckStatus,
+} from '../../globalHelpers';
 import { toast } from 'react-toastify';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import { useAuth } from '@/app/context/AuthContext';
 
 export default function AdminDashboard() {
   const { user, servers: authServers } = useAuth();
-  const [servers, setServers] = useState<Server[]>([]);
-  const [masterServerAddress, setMasterServerAddress] = useState('');
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [connectedToMaster, setConnectedToMaster] = useState(false);
+  const [servers, setServers] = useState<Server[]>([
+    {
+      id: '1',
+      name: 'Server 1',
+      address: 'http://localhost:5001',
+      status: 'offline',
+    },
+    {
+      id: '2',
+      name: 'Server 2',
+      address: 'http://localhost:5002',
+      status: 'offline',
+    },
+    {
+      id: '3',
+      name: 'Server 3',
+      address: 'http://localhost:5003',
+      status: 'offline',
+    },
+    {
+      id: '4',
+      name: 'Server 4',
+      address: 'http://localhost:5004',
+      status: 'offline',
+    },
+    {
+      id: '5',
+      name: 'Server 5',
+      address: 'http://localhost:5005',
+      status: 'offline',
+    },
+  ]);
   const [t, setT] = useState<number>(0);
   const [n, setN] = useState<number>(0);
 
@@ -32,58 +66,9 @@ export default function AdminDashboard() {
     setServers([]);
   };
 
-  
-  const connectToMasterServer = useCallback(async () => {
-    if (!masterServerAddress) return;
-
-    setIsConnecting(true);
-    try {
-      await getInitialValues(setT, setN, setServers, masterServerAddress);
-      setConnectedToMaster(true);
-    } catch {
-      setConnectedToMaster(false);
-    } finally {
-      setIsConnecting(false);
-    }
-  }, [masterServerAddress]);
-
   // Initialize available servers from auth context
-  useEffect(() => {
-    let cleanupServerChecks: (() => void) | undefined;
-
-    if (user?.admin && authServers.length > 0) {
-      const initialServers: Server[] = authServers.map((server) => ({
-        id: server,
-        name: server,
-        address: server,
-        status: 'offline' as const,
-      }));
-      setServers(initialServers);
-      setMasterServerAddress(authServers[0] || '');
-      
-      // Start server status checks
-      cleanupServerChecks = handleAllServersStatus(initialServers, setServers);
-    } else {
-      // Clear state if user logs out or loses admin status
-      setServers([]);
-      setMasterServerAddress('');
-      setConnectedToMaster(false);
-    }
-
-    // Cleanup function will be called when component unmounts or user logs out
-    return () => {
-      if (cleanupServerChecks) {
-        cleanupServerChecks();
-      }
-    };
-  }, [user, authServers]);
 
   // Handle master server connection
-  useEffect(() => {
-    if (masterServerAddress && !connectedToMaster) {
-      void connectToMasterServer();
-    }
-  }, [masterServerAddress, connectedToMaster, connectToMasterServer]);
 
   const handleStartAuction = async () => {
     const serverAddresses = getServerAddresses(servers);
@@ -104,6 +89,14 @@ export default function AdminDashboard() {
     await performComparison(serverAddresses, biddersIdsInfo);
   };
 
+  const handleSendInitialData = () => {
+    if (servers.length === 0) {
+      toast.error('No servers available to send initial data.');
+      return;
+    }
+    const serverAddresses = getServerAddresses(servers);
+    sendInitialData(serverAddresses);
+  };
 
   return (
     <ProtectedRoute adminOnly>
@@ -140,6 +133,16 @@ export default function AdminDashboard() {
                       <MdRestore className='h-4 w-4' />
                     </Button>
                   </li>
+                  <li className='w-full lg:w-fit'>
+                    <Button
+                      style='w-full flex gap-2 justify-center items-center'
+                      variant='outline'
+                      onClick={() => handleSendInitialData()}
+                    >
+                      Send initial values
+                      <MdRestore className='h-4 w-4' />
+                    </Button>
+                  </li>
                 </ul>
               </div>
             </div>
@@ -173,9 +176,11 @@ export default function AdminDashboard() {
                           <td className='basis-2/10 sm:basis-2/10'>
                             <div
                               className={`w-min mx-auto rounded-full px-2 py-1 text-xs lg:text-sm lg:px-3 lg:py-1.5 ${
-                                server.status === 'online' ? 'bg-green-100 text-green-800' :
-                                server.status === 'checking' ? 'bg-amber-100 text-amber-800' :
-                                'bg-red-100 text-red-800'
+                                server.status === 'online'
+                                  ? 'bg-green-100 text-green-800'
+                                  : server.status === 'checking'
+                                    ? 'bg-amber-100 text-amber-800'
+                                    : 'bg-red-100 text-red-800'
                               }`}
                             >
                               {server.status}
@@ -184,11 +189,17 @@ export default function AdminDashboard() {
                           <td className='basis-2/10 flex justify-center sm:basis-1/10'>
                             <Button
                               variant='ghost'
-                              onClick={() => handleCheckStatus(server.id, servers, setServers)}
+                              onClick={() =>
+                                handleCheckStatus(
+                                  server.id,
+                                  servers,
+                                  setServers,
+                                )
+                              }
                               disabled={server.status === 'checking'}
                             >
-                              <MdOutlineRefresh 
-                              className={`h-4 w-4 ${server.status === 'checking' ? 'animate-spin' : ''}`} 
+                              <MdOutlineRefresh
+                                className={`h-4 w-4 ${server.status === 'checking' ? 'animate-spin' : ''}`}
                               />
                             </Button>
                           </td>

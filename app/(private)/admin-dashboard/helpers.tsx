@@ -18,7 +18,7 @@ export const sendInitialData = async (servers: string[]): Promise<void> => {
 
   await Promise.all(
     servers.map((server, i) =>
-      fetch(`${server}api/initial-values`, {
+      fetch(`${server}/api/initial-values`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -66,7 +66,7 @@ export const reset = async (
 
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}api/reset`, {
+      fetch(`${server}/api/reset`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -124,7 +124,7 @@ export const hardReset = async (
 
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}api/factory-reset`, {
+      fetch(`${server}/api/factory-reset`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -207,7 +207,7 @@ export const getBiddersIds = async (
 
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}api/get-bidders`, {
+      fetch(`${server}/api/get-bidders`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -244,7 +244,7 @@ export const resetCalculation = async (
 
   await Promise.all(
     servers.map((server: string) =>
-      fetch(`${server}api/reset-calculation`, {
+      fetch(`${server}/api/reset-calculation`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -277,7 +277,7 @@ export const resetComparison = async (
 
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}api/reset-comparison`, {
+      fetch(`${server}/api/reset-comparison`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -308,7 +308,7 @@ export const calculateA = async (servers: string[]): Promise<PromiseResult> => {
 
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}api/calculate-A`, {
+      fetch(`${server}/api/calculate-A`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -341,7 +341,7 @@ export const calculateShareOfRandomNumber = async (
 
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}api/calculate-share-of-random-number`, {
+      fetch(`${server}/api/calculate-share-of-random-number`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -352,12 +352,14 @@ export const calculateShareOfRandomNumber = async (
         .then(async (res) => {
           const data = await res.json();
           if (!res.ok) {
+            console.error(`Error on server ${server}: ${data.detail}`);
             errorInfo.push([server, data.detail]);
             return;
           }
           messageInfo.push([server, data.result]);
         })
         .catch((err) => {
+          console.error(`Error on server ${server}: ${err.message}`);
           errorInfo.push([server, err.message]);
         }),
     ),
@@ -375,8 +377,8 @@ export const calculateAComparison = async (
 
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}api/calculate-a-comparison`, {
-        method: 'POST',
+      fetch(`${server}/api/calculate-a-comparison`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
@@ -415,8 +417,8 @@ export const promisesReconstruct = async (
 
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}api/reconstruct-secret`, {
-        method: 'GET',
+      fetch(`${server}/api/reconstruct-secret`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
@@ -453,7 +455,7 @@ export const calculateZ = async (
 
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}api/calculate-z-comparison`, {
+      fetch(`${server}/api/calculate-z-comparison`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -492,7 +494,7 @@ export const popZ = async (servers: string[]): Promise<PromiseResult> => {
 
     await Promise.all(
       servers.map((server) =>
-        fetch(`${server}api/pop-zZ`, {
+        fetch(`${server}/api/pop-zZ`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -527,8 +529,8 @@ export const recalculateFinalSecrets = async (
 
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}api/reconstruct-secret`, {
-        method: 'GET',
+      fetch(`${server}/api/reconstruct-secret`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
@@ -801,7 +803,7 @@ export const romb = async (serverAdresses: string[]) => {
   let Multishares = [];
 
   const taskRomb1 = serverAdresses.map((server) =>
-    fetch(`${server}api/reset-calculation`, {
+    fetch(`${server}/api/reset-calculation`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -823,7 +825,7 @@ export const romb = async (serverAdresses: string[]) => {
   await Promise.all(taskRomb1);
 
   const taskRomb2 = serverAdresses.map((server) =>
-    fetch(`${server}api/redistribute-q`, {
+    fetch(`${server}/api/redistribute-q`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -846,7 +848,7 @@ export const romb = async (serverAdresses: string[]) => {
   await Promise.all(taskRomb2);
 
   const taskRomb3 = serverAdresses.map((server) =>
-    fetch(`${server}api/redistribute-r`, {
+    fetch(`${server}/api/redistribute-r`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -876,7 +878,7 @@ export const romb = async (serverAdresses: string[]) => {
   await Promise.all(taskRomb3);
 
   const taskRomb4 = serverAdresses.map((server) =>
-    fetch(`${server}api/calculate-multiplicative-share`, {
+    fetch(`${server}/api/calculate-multiplicative-share`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -906,7 +908,7 @@ export const romb = async (serverAdresses: string[]) => {
   await Promise.all(taskRomb4);
 
   const taskRomb5 = serverAdresses.map((server) =>
-    fetch(`${server}api/reset-calculation`, {
+    fetch(`${server}/api/reset-calculation`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -933,7 +935,7 @@ export const romb = async (serverAdresses: string[]) => {
   Rs = [];
 
   const taskRomb6 = serverAdresses.map((server) =>
-    fetch(`${server}api/redistribute-q`, {
+    fetch(`${server}/api/redistribute-q`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -956,7 +958,7 @@ export const romb = async (serverAdresses: string[]) => {
   await Promise.all(taskRomb6);
 
   const taskRomb7 = serverAdresses.map((server) =>
-    fetch(`${server}api/redistribute-r`, {
+    fetch(`${server}/api/redistribute-r`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -988,7 +990,7 @@ export const romb = async (serverAdresses: string[]) => {
   Multishares = [];
 
   const taskRomb8 = serverAdresses.map((server) =>
-    fetch(`${server}api/calculate-multiplicative-share`, {
+    fetch(`${server}/api/calculate-multiplicative-share`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -1018,7 +1020,7 @@ export const romb = async (serverAdresses: string[]) => {
   await Promise.all(taskRomb8);
 
   const taskRomb9 = serverAdresses.map((server) =>
-    fetch(`${server}api/reset-calculation`, {
+    fetch(`${server}/api/reset-calculation`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1120,6 +1122,185 @@ export const handleWinnerToast = (
   }
 };
 
+export const comparison = async (
+  servers: string[],
+  openedA: number,
+  l: number,
+  k: number,
+): Promise<void> => {
+  // Prepare z tables for all servers
+  await Promise.all(
+    servers.map((server) =>
+      fetch(`${server}/api/prepare-z-tables`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          Authorization: `Bearer ${getTokenForServer(server)}`,
+        },
+        body: JSON.stringify({
+          opened_a: openedA.toString(16),
+          l: l,
+          k: k,
+        }),
+      }),
+    ),
+  );
+
+  for (let i = 0; i < l; i++) {
+    await calculateZTables(servers, l);
+  }
+
+  // Initialize z and Z for all servers
+  await Promise.all(
+    servers.map((server) =>
+      fetch(`${server}/api/initialize-z-and-Z`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          Authorization: `Bearer ${getTokenForServer(server)}`,
+        },
+        body: JSON.stringify({
+          l: l,
+        }),
+      }),
+    ),
+  );
+
+  for (let i = l - 1; i >= 0; i--) {
+    // Prepare for next round of comparison
+    await Promise.all(
+      servers.map((server) =>
+        fetch(`${server}/api/prepare-for-next-romb/${i}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Authorization: `Bearer ${getTokenForServer(server)}`,
+          },
+        }),
+      ),
+    );
+
+    // x AND y
+    await multiplyShares(servers, 'x', 'y', 'z');
+
+    // Reset calculation for all servers
+    await Promise.all(
+      servers.map((server) =>
+        fetch(`${server}/api/reset-calculation`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Authorization: `Bearer ${getTokenForServer(server)}`,
+          },
+        }),
+      ),
+    );
+
+    // X XOR Y
+    await xorShares(servers, 'X', 'Y', 'Z');
+
+    // Reset calculation for all servers
+    await Promise.all(
+      servers.map((server) =>
+        fetch(`${server}/api/reset-calculation`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Authorization: `Bearer ${getTokenForServer(server)}`,
+          },
+        }),
+      ),
+    );
+
+    // Calculate x AND (X XOR Y)
+    await multiplyShares(servers, 'x', 'Z', 'Z');
+
+    // Reset calculation for all servers
+    await Promise.all(
+      servers.map((server) =>
+        fetch(`${server}/api/reset-calculation`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Authorization: `Bearer ${getTokenForServer(server)}`,
+          },
+        }),
+      ),
+    );
+
+    // x AND (X XOR Y) XOR X
+    await xorShares(servers, 'Z', 'X', 'Z');
+
+    // Reset calculation for all servers
+    await Promise.all(
+      servers.map((server) =>
+        fetch(`${server}/api/reset-calculation`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Authorization: `Bearer ${getTokenForServer(server)}`,
+          },
+        }),
+      ),
+    );
+  }
+
+  // [res] = a_l XOR [r_l] XOR [Z]
+  await Promise.all(
+    servers.map((server) =>
+      fetch(`${server}/api/prepare-shares-for-res-xors/${l}/${l}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          Authorization: `Bearer ${getTokenForServer(server)}`,
+        },
+      }),
+    ),
+  );
+
+  // a_l XOR [r_l] -> assign to [res]
+  await xorShares(servers, 'a_l', 'r_l', 'res');
+
+  // Reset calculation for all servers
+  await Promise.all(
+    servers.map((server) =>
+      fetch(`${server}/api/reset-calculation`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          Authorization: `Bearer ${getTokenForServer(server)}`,
+        },
+      }),
+    ),
+  );
+
+  // [res] XOR [Z] -> assign to [res]
+  await xorShares(servers, 'res', 'Z', 'res');
+
+  // Reset calculation for all servers
+  await Promise.all(
+    servers.map((server) =>
+      fetch(`${server}/api/reset-calculation`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          Authorization: `Bearer ${getTokenForServer(server)}`,
+        },
+      }),
+    ),
+  );
+};
+
 export const performComparison = async (
   serverAddresses: string[],
   biddersIdsInfo: NumberPair,
@@ -1142,6 +1323,33 @@ export const performComparison = async (
       'Reset comparison failed!',
     );
 
+    const calculateAInfo = await calculateA(serverAddresses);
+
+    handleToast(
+      calculateAInfo,
+      'Calculate A comparison success!',
+      'Calculate A comparison failed!',
+    );
+
+    console.log('Sharing random bits...');
+
+    for (let round = 0; round < 3; round++) {
+      for (let i = 0; i < l + k + 1; i++) {
+        await shareRandomBit(serverAddresses, PRIME_NUMBER, i);
+      }
+    }
+
+    console.log('Shares of random bits sent to all servers');
+
+    const calculateShareOfRandomNumberInfo =
+      await calculateShareOfRandomNumber(serverAddresses);
+
+    handleToast(
+      calculateShareOfRandomNumberInfo,
+      'Reconstruct secrets success!',
+      'Reconstruct secrets failed!',
+    );
+
     const calculateAComparisonInfo = await calculateAComparison(
       serverAddresses,
       [currentWinner, currentContender],
@@ -1161,32 +1369,24 @@ export const performComparison = async (
       'Reconstruct secrets failed!',
     );
 
-    const calculateZInfo = await calculateZ(
+    await comparison(
       serverAddresses,
       promisesReconstructInfo.secrets[0][1],
+      l,
+      k,
     );
 
-    handleToast(calculateZInfo, 'Calculate Z success!', 'Calculate Z failed!');
-
-    const popZInfo = await popZ(serverAddresses);
-
-    handleToast(popZInfo, 'Pop Z success!', 'Pop Z failed!');
-
-    await calculateFinalComparisonResult(
-      serverAddresses,
-      promisesReconstructInfo.secrets[0][1],
-    );
-
-    recalculateFinalSecretsInfo =
+    const promisesReconstructInfo2 =
       await recalculateFinalSecrets(serverAddresses);
 
     handleToast(
-      recalculateFinalSecretsInfo,
-      'Recalculate final secrets success!',
-      'Recalculate final secrets failed!',
+      promisesReconstructInfo2,
+      'Reconstruct secrets success!',
+      'Reconstruct secrets failed!',
     );
 
-    const firstResult = recalculateFinalSecretsInfo.finalSecrets[0][1];
+    console.log(promisesReconstructInfo2);
+    const firstResult = promisesReconstructInfo2.finalSecrets[0][1];
 
     if (parseInt(firstResult, 16) === 0) currentWinner = currentContender;
   }
@@ -1206,7 +1406,7 @@ export const addShares = async (
 
   // Step 1: Calculate additive share for all servers
   const calculateTasks = servers.map((server) =>
-    fetch(`${server}api/calculate-additive-share`, {
+    fetch(`${server}/api/calculate-additive-share`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -1234,7 +1434,7 @@ export const addShares = async (
 
   // Step 2: Set the result share to the additive share
   const setResultTasks = servers.map((server) =>
-    fetch(`${server}api/set-additive-share/${resultShareName}`, {
+    fetch(`${server}/api/set-additive-share/${resultShareName}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -1352,7 +1552,7 @@ export const xorShares = async (
   // Step 1: Calculate additive shares
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}api/calculate-additive-share`, {
+      fetch(`${server}/api/calculate-additive-share`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1371,7 +1571,7 @@ export const xorShares = async (
   // Step 2: Redistribute q values
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}api/redistribute-q`, {
+      fetch(`${server}/api/redistribute-q`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1386,7 +1586,7 @@ export const xorShares = async (
   // Step 3: Redistribute r values
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}api/redistribute-r`, {
+      fetch(`${server}/api/redistribute-r`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1405,7 +1605,7 @@ export const xorShares = async (
   // Step 4: Calculate multiplicative share
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}api/calculate-multiplicative-share`, {
+      fetch(`${server}/api/calculate-multiplicative-share`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1420,7 +1620,7 @@ export const xorShares = async (
   // Step 5: Calculate XOR share
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}api/calculate-xor-share`, {
+      fetch(`${server}/api/calculate-xor-share`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1435,7 +1635,7 @@ export const xorShares = async (
   // Step 6: Set result share to XOR share
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}api/set-xor-share/${resultShareName}`, {
+      fetch(`${server}/api/set-xor-share/${resultShareName}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1454,7 +1654,7 @@ export const shareRandomU = async (servers: string[]): Promise<void> => {
   // Step 1: Redistribute u values
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}api/redistribute-u`, {
+      fetch(`${server}/api/redistribute-u`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1469,7 +1669,7 @@ export const shareRandomU = async (servers: string[]): Promise<void> => {
   // Step 2: Calculate shared u values
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}api/calculate-shared-u`, {
+      fetch(`${server}/api/calculate-shared-u`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1544,7 +1744,7 @@ export async function shareRandomBit(
     const results = await Promise.all(
       parties.map((party) =>
         fetch(`${party}/api/reconstruct-secret`, {
-          method: 'GET',
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Accept: 'application/json',
@@ -1605,8 +1805,6 @@ export async function shareRandomBit(
     ),
   );
 
-  const one = 1;
-
   // Dummy sharing of 1
   await Promise.all(
     parties.map((party) =>
@@ -1619,7 +1817,7 @@ export async function shareRandomBit(
         },
         body: JSON.stringify({
           share_name: 'dummy_sharing_of_one',
-          share_value: one.toString(16),
+          share_value: '0x1',
         }),
       }),
     ),
@@ -1699,7 +1897,7 @@ export const calculateZTableXOR = async (
   // Calculate additive shares of z table for all servers
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}api/calculate-additive-share-of-z-table/${index}`, {
+      fetch(`${server}/api/calculate-additive-share-of-z-table/${index}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1713,7 +1911,7 @@ export const calculateZTableXOR = async (
   // Calculate and redistribute q value
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}api/redistribute-q`, {
+      fetch(`${server}/api/redistribute-q`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1727,7 +1925,7 @@ export const calculateZTableXOR = async (
   // Calculate and redistribute r values
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}api/calculate-r-of-z-table/${index}`, {
+      fetch(`${server}/api/calculate-r-of-z-table/${index}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1741,7 +1939,7 @@ export const calculateZTableXOR = async (
   // Calculate the multiplicative share
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}api/calculate-multiplicative-share`, {
+      fetch(`${server}/api/calculate-multiplicative-share`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1755,7 +1953,7 @@ export const calculateZTableXOR = async (
   // Calculate the XOR share
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}api/calculate-xor-share`, {
+      fetch(`${server}/api/calculate-xor-share`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1769,7 +1967,7 @@ export const calculateZTableXOR = async (
   // Set the z table to XOR share
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}api/set-z-table-to-xor-share/${index}`, {
+      fetch(`${server}/api/set-z-table-to-xor-share/${index}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1791,7 +1989,7 @@ export const calculateZTables = async (
     // Reset calculation for all servers
     await Promise.all(
       servers.map((server) =>
-        fetch(`${server}api/reset-calculation`, {
+        fetch(`${server}/api/reset-calculation`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1802,183 +2000,4 @@ export const calculateZTables = async (
       ),
     );
   }
-};
-
-export const comparison = async (
-  servers: string[],
-  openedA: number,
-  l: number,
-  k: number,
-): Promise<void> => {
-  // Prepare z tables for all servers
-  await Promise.all(
-    servers.map((server) =>
-      fetch(`${server}api/prepare-z-tables`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          Authorization: `Bearer ${getTokenForServer(server)}`,
-        },
-        body: JSON.stringify({
-          opened_a: openedA.toString(16),
-          l: l,
-          k: k,
-        }),
-      }),
-    ),
-  );
-
-  for (let i = 0; i < l; i++) {
-    await calculateZTables(servers, l);
-  }
-
-  // Initialize z and Z for all servers
-  await Promise.all(
-    servers.map((server) =>
-      fetch(`${server}api/initialize-z-and-Z`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          Authorization: `Bearer ${getTokenForServer(server)}`,
-        },
-        body: JSON.stringify({
-          l: l,
-        }),
-      }),
-    ),
-  );
-
-  for (let i = l - 1; i >= 0; i--) {
-    // Prepare for next round of comparison
-    await Promise.all(
-      servers.map((server) =>
-        fetch(`${server}api/prepare-for-next-romb/${i}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-            Authorization: `Bearer ${getTokenForServer(server)}`,
-          },
-        }),
-      ),
-    );
-
-    // x AND y
-    await multiplyShares(servers, 'x', 'y', 'z');
-
-    // Reset calculation for all servers
-    await Promise.all(
-      servers.map((server) =>
-        fetch(`${server}api/reset-calculation`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-            Authorization: `Bearer ${getTokenForServer(server)}`,
-          },
-        }),
-      ),
-    );
-
-    // X XOR Y
-    await xorShares(servers, 'X', 'Y', 'Z');
-
-    // Reset calculation for all servers
-    await Promise.all(
-      servers.map((server) =>
-        fetch(`${server}api/reset-calculation`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-            Authorization: `Bearer ${getTokenForServer(server)}`,
-          },
-        }),
-      ),
-    );
-
-    // Calculate x AND (X XOR Y)
-    await multiplyShares(servers, 'x', 'Z', 'Z');
-
-    // Reset calculation for all servers
-    await Promise.all(
-      servers.map((server) =>
-        fetch(`${server}api/reset-calculation`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-            Authorization: `Bearer ${getTokenForServer(server)}`,
-          },
-        }),
-      ),
-    );
-
-    // x AND (X XOR Y) XOR X
-    await xorShares(servers, 'Z', 'X', 'Z');
-
-    // Reset calculation for all servers
-    await Promise.all(
-      servers.map((server) =>
-        fetch(`${server}api/reset-calculation`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-            Authorization: `Bearer ${getTokenForServer(server)}`,
-          },
-        }),
-      ),
-    );
-  }
-
-  // [res] = a_l XOR [r_l] XOR [Z]
-  await Promise.all(
-    servers.map((server) =>
-      fetch(`${server}api/prepare-shares-for-res-xors/${l}/${l}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          Authorization: `Bearer ${getTokenForServer(server)}`,
-        },
-      }),
-    ),
-  );
-
-  // a_l XOR [r_l] -> assign to [res]
-  await xorShares(servers, 'a_l', 'r_l', 'res');
-
-  // Reset calculation for all servers
-  await Promise.all(
-    servers.map((server) =>
-      fetch(`${server}api/reset-calculation`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          Authorization: `Bearer ${getTokenForServer(server)}`,
-        },
-      }),
-    ),
-  );
-
-  // [res] XOR [Z] -> assign to [res]
-  await xorShares(servers, 'res', 'Z', 'res');
-
-  // Reset calculation for all servers
-  await Promise.all(
-    servers.map((server) =>
-      fetch(`${server}api/reset-calculation`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          Authorization: `Bearer ${getTokenForServer(server)}`,
-        },
-      }),
-    ),
-  );
 };

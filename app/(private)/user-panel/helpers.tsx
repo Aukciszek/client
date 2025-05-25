@@ -5,7 +5,6 @@ import { getTokenForServer } from '../../utils/auth';
 
 export const handleShamir = async (
   secret: number,
-  id: number,
   t: number,
   n: number,
   servers: string[],
@@ -17,10 +16,10 @@ export const handleShamir = async (
 
   await Promise.all(
     servers.map((server, i) =>
-      fetch(`${server}api/set-client-shares`, {
+      fetch(`${server}/api/set-client-shares`, {
         method: 'POST',
         headers: {
-          'content-type': 'application/json',
+          'Content-Type': 'application/json',
           Accept: 'application/json',
           Authorization: `Bearer ${getTokenForServer(server)}`,
         },
@@ -141,10 +140,10 @@ export const handleMultiplication = async (
   const messageQError: [string, string][] = [];
 
   const promises_q = servers.map((server) =>
-    fetch(`${server}api/redistribute-q`, {
+    fetch(`${server}/api/redistribute-q`, {
       method: 'POST',
       headers: {
-        'content-type': 'application/json',
+        'Content-Type': 'application/json',
         Accept: 'application/json',
         Authorization: `Bearer ${getTokenForServer(server)}`,
       },
@@ -192,10 +191,10 @@ export const handleMultiplication = async (
   const messageRError: [string, string][] = [];
 
   const promises_r = servers.map((server) =>
-    fetch(`${server}api/redistribute-r`, {
+    fetch(`${server}/api/redistribute-r`, {
       method: 'POST',
       headers: {
-        'content-type': 'application/json',
+        'Content-Type': 'application/json',
         Accept: 'application/json',
         Authorization: `Bearer ${getTokenForServer(server)}`,
       },
@@ -247,10 +246,10 @@ export const handleMultiplication = async (
   const messageErrorCalculateShare: [string, string][] = [];
 
   const promises = servers.map((server) =>
-    fetch(`${server}api/calculate-multiplicative-share`, {
+    fetch(`${server}/api/calculate-multiplicative-share`, {
       method: 'PUT',
       headers: {
-        'content-type': 'application/json',
+        'Content-Type': 'application/json',
         Accept: 'application/json',
         Authorization: `Bearer ${getTokenForServer(server)}`,
       },
@@ -297,10 +296,10 @@ export const handleMultiplication = async (
   const messageErrorReconstruct: [string, number][] = [];
 
   const promisesReconstruct = servers.map((server) =>
-    fetch(`${server}api/reconstruct-secret`, {
+    fetch(`${server}/api/reconstruct-secret`, {
       method: 'GET',
       headers: {
-        'content-type': 'application/json',
+        'Content-Type': 'application/json',
         Accept: 'application/json',
         Authorization: `Bearer ${getTokenForServer(server)}`,
       },
