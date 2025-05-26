@@ -27,7 +27,7 @@ export default function ClientDashboard() {
   useEffect(() => {
     let cleanupServerChecks: (() => void) | undefined;
 
-    if (authServers.length > 0 && user) {
+    if (user) {
       const initialServers: Server[] = authServers.map((server) => ({
         id: server,
         name: server,

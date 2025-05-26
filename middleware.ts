@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { toast } from 'react-toastify';
 
 // No authentication required
 const publicPaths = ['/privacy', '/about', '/terms'];
@@ -15,16 +16,13 @@ const userPaths = ['/user-panel'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  console.log('Current pathname:', pathname);
 
   // Get auth token from cookies
   const authToken = request.cookies.get('access_token');
-  console.log('Auth token present:', !!authToken?.value);
-  console.log('Request URL:', request.url);
 
   // Handle root path
   if (pathname === '/') {
-    console.log('Handling root path navigation');
+    // Handling root path navigation
     if (authToken?.value) {
       try {
         const payload = parseJwt(authToken.value);
@@ -34,7 +32,7 @@ export function middleware(request: NextRequest) {
         const redirectUrl = new URL(targetPath, request.url);
         return NextResponse.redirect(redirectUrl);
       } catch (error) {
-        console.log('Error parsing JWT at root path:', error);
+        toast.error(`Error parsing JWT at root path: ${error}`);
         return NextResponse.next();
       }
     }
@@ -43,26 +41,19 @@ export function middleware(request: NextRequest) {
 
   // If user is authenticated and tries to access auth pages, redirect to appropriate dashboard
   if (authToken?.value && authPaths.includes(pathname)) {
-    console.log('Authenticated user attempting to access auth page:', pathname);
     try {
       const payload = parseJwt(authToken.value);
       const targetPath = payload?.isAdmin ? '/admin-dashboard' : '/user-panel';
-      console.log('Auth page redirect:', {
-        from: pathname,
-        to: targetPath,
-        isAdmin: payload?.isAdmin,
-      });
       const redirectUrl = new URL(targetPath, request.url);
       return NextResponse.redirect(redirectUrl);
     } catch (error) {
-      console.log('Error parsing JWT at auth path:', error);
+      toast.error(`Error parsing JWT at auth path: ${error}`);
       return NextResponse.next();
     }
   }
 
   // Allow public paths without authentication
   if (publicPaths.includes(pathname)) {
-    console.log('Allowing access to public path:', pathname);
     return NextResponse.next();
   }
 
@@ -72,10 +63,6 @@ export function middleware(request: NextRequest) {
     !publicPaths.includes(pathname) &&
     !authPaths.includes(pathname)
   ) {
-    console.log('Unauthorized access attempt:', {
-      path: pathname,
-      redirectingTo: '/sign-in',
-    });
     const signInUrl = new URL('/sign-in', request.url);
     return NextResponse.redirect(signInUrl);
   }
@@ -87,30 +74,16 @@ export function middleware(request: NextRequest) {
 
       // Prevent admin users from accessing user panel
       if (userPaths.includes(pathname) && payload?.isAdmin) {
-        console.log('Admin attempted to access user path:', {
-          path: pathname,
-          redirectingTo: '/admin-dashboard',
-        });
         const adminDashboardUrl = new URL('/admin-dashboard', request.url);
         return NextResponse.redirect(adminDashboardUrl);
       }
 
       // Prevent regular users from accessing admin routes
       if (adminPaths.includes(pathname) && !payload?.isAdmin) {
-        console.log('Regular user attempted to access admin path:', {
-          path: pathname,
-          redirectingTo: '/user-panel',
-        });
         const userPanelUrl = new URL('/user-panel', request.url);
         return NextResponse.redirect(userPanelUrl);
       }
-
-      console.log('Access granted to protected path:', {
-        path: pathname,
-        userRole: payload?.isAdmin ? 'admin' : 'user',
-      });
     } catch (error) {
-      console.log('Error verifying user access:', { path: pathname, error });
       const signInUrl = new URL('/sign-in', request.url);
       return NextResponse.redirect(signInUrl);
     }
@@ -124,7 +97,6 @@ function parseJwt(token: string) {
   try {
     const base64Payload = token.split('.')[1];
     const payload = Buffer.from(base64Payload, 'base64').toString('utf-8');
-    console.log('Decoded payload:', payload);
     return JSON.parse(payload);
   } catch (error) {
     return null;

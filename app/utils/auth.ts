@@ -1,3 +1,4 @@
+import { toast } from 'react-toastify';
 import Cookies from 'universal-cookie';
 
 // Define interfaces for token structure
@@ -45,10 +46,9 @@ export const getTokensList = (): string | null => {
 };
 
 // Remove token cookie
-export const removeToken = (): void => {
+export const removeCookie = ( cookieName: string ): void => {
   const cookies = new Cookies();
-  cookies.remove('access_token', { path: '/' });
-  cookies.remove('access_tokens', { path: '/' });
+  cookies.remove(cookieName, { path: '/' });
 };
 
 // Check if user is logged in
@@ -82,6 +82,16 @@ export const parseTokensList = (token: string | null): DecodedToken | null => {
     const base64Url = token.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     return JSON.parse(window.atob(base64));
+  } catch {
+    return null;
+  }
+};
+
+export const parseServersList = (serversFromToken: string | null): string[] | null => {
+  if (!serversFromToken) return [];
+  try {
+    const decoded = decodeURIComponent(serversFromToken);
+    return JSON.parse(decoded);
   } catch {
     return null;
   }
@@ -185,17 +195,72 @@ export const parseTokensListAndServers = (
 
     // Store servers list for future use
     serversList = servers;
+    setServersListCookie(servers);
+
 
     return { decodedFirstToken, servers };
   } catch (error) {
-    console.error('Error parsing tokens list:', error);
+    toast.error(`Error parsing tokens list: ${error}`);
     throw new Error('Failed to parse tokens list and extract servers');
+  }
+};
+
+export const setServersListCookie = (servers: string[]): void => {
+  const cookies = new Cookies();
+  try {
+    const encodedServers = JSON.stringify(servers);
+    cookies.set('servers_list', encodedServers, {
+      path: '/',
+      maxAge: 2592000 // 30 days
+    });
+    serversList = servers;
+  } catch (error) {
+    toast.error(`Error setting servers list cookie: ${error}`);
   }
 };
 
 // Get stored servers list
 export const getServersList = (): string[] => {
-  return serversList;
+  // From JWT
+  let servers = serversList;
+  
+  // From cookie
+  if (servers.length === 0) {
+    servers = getServersListFromCookie();
+    serversList = servers;
+  }
+  
+  return servers;
+};
+
+// Get stored servers list
+export const getServersListFromCookie = (): string[] => {
+  const cookies = new Cookies();
+  try {
+    const storedServers = cookies.get('servers_list');
+    
+    // If no cookie exists, return empty array
+    if (!storedServers) {
+      return [];
+    }
+    
+    // If the stored value is already an array, return it
+    if (Array.isArray(storedServers)) {
+      return storedServers;
+    }
+    
+    // If it's a string, try to decode and parse it
+    if (typeof storedServers === 'string') {
+      const decodedValue = decodeURIComponent(storedServers);
+      const parsedServers = JSON.parse(decodedValue);
+      return Array.isArray(parsedServers) ? parsedServers : [];
+    }
+    
+    return [];
+  } catch (error) {
+    toast.error(`Error parsing stored servers list: ${error}`);
+    return [];
+  }
 };
 
 // Get token for specific server

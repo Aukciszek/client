@@ -1,6 +1,6 @@
 import { toast } from 'react-toastify';
 import { k, l, PRIME_NUMBER } from '../../constants';
-import { getTokenForServer } from '../../utils/auth';
+import { getServersList, getTokenForServer } from '../../utils/auth';
 import type {
   PromiseResultFinalSecrets,
   PromiseResultWithSecrets,
@@ -140,6 +140,7 @@ export const hardReset = async (
           }
           messageInfo.push([server, data.result]);
           handleClearData();
+          getServersList()
         })
         .catch((err) => {
           errorInfo.push([server, err.message]);
@@ -352,14 +353,14 @@ export const calculateShareOfRandomNumber = async (
         .then(async (res) => {
           const data = await res.json();
           if (!res.ok) {
-            console.error(`Error on server ${server}: ${data.detail}`);
+            toast.error(`Error on server ${server}: ${data.detail}`);
             errorInfo.push([server, data.detail]);
             return;
           }
           messageInfo.push([server, data.result]);
         })
         .catch((err) => {
-          console.error(`Error on server ${server}: ${err.message}`);
+          toast.error(`Error on server ${server}: ${err.message}`);
           errorInfo.push([server, err.message]);
         }),
     ),
@@ -598,7 +599,7 @@ export const xor = async (
       }).then(async (res) => {
         if (!res.ok) {
           const data = await res.json();
-          console.error(`Error resetting ${party}: ${data.detail}`);
+          toast.error(`Error resetting ${party}: ${data.detail}`);
         }
       }),
     );
@@ -679,11 +680,11 @@ export async function calculateFinalComparisonResult(
       .then(async (res) => {
         if (!res.ok) {
           const data = await res.json();
-          console.error(`Error resetting ${party}: ${data.detail}`);
+          toast.error(`Error resetting ${party}: ${data.detail}`);
         }
       })
       .catch((err) => {
-        console.error(`Error resetting ${party}: ${err.message}`);
+        toast.error(`Error resetting ${party}: ${err.message}`);
       }),
   );
   await Promise.all(resetTasks);
@@ -700,11 +701,11 @@ export async function calculateFinalComparisonResult(
       .then(async (res) => {
         if (!res.ok) {
           const data = await res.json();
-          console.error(`Error redistributing q for ${party}: ${data.detail}`);
+          toast.error(`Error redistributing q for ${party}: ${data.detail}`);
         }
       })
       .catch((err) => {
-        console.error(`Error redistributing q for ${party}: ${err.message}`);
+        toast.error(`Error redistributing q for ${party}: ${err.message}`);
       }),
   );
   await Promise.all(qTasks);
@@ -727,11 +728,11 @@ export async function calculateFinalComparisonResult(
       .then(async (res) => {
         if (!res.ok) {
           const data = await res.json();
-          console.error(`Error redistributing r for ${party}: ${data.detail}`);
+          toast.error(`Error redistributing r for ${party}: ${data.detail}`);
         }
       })
       .catch((err) => {
-        console.error(`Error redistributing r for ${party}: ${err.message}`);
+        toast.error(`Error redistributing r for ${party}: ${err.message}`);
       }),
   );
   await Promise.all(rTasks);
@@ -751,13 +752,13 @@ export async function calculateFinalComparisonResult(
       .then(async (res) => {
         if (!res.ok) {
           const data = await res.json();
-          console.error(
+          toast.error(
             `Error calculating multiplicative share for ${party}: ${data.detail}`,
           );
         }
       })
       .catch((err) => {
-        console.error(
+        toast.error(
           `Error calculating multiplicative share for ${party}: ${err.message}`,
         );
       }),
@@ -781,13 +782,13 @@ export async function calculateFinalComparisonResult(
       .then(async (res) => {
         if (!res.ok) {
           const data = await res.json();
-          console.error(
+          toast.error(
             `Error calculating comparison result for ${party}: ${data.detail}`,
           );
         }
       })
       .catch((err) => {
-        console.error(
+        toast.error(
           `Error calculating comparison result for ${party}: ${err.message}`,
         );
       }),
@@ -1099,10 +1100,15 @@ export const handleBiddersIdsToast = (
 export const handleWinnerToast = (
   recalculateFinalSecretsInfo: PromiseResultFinalSecrets,
   currentWinner: number,
+  loadingToastId?: string,
 ): void => {
   const allResultsMatch = areAllValuesTheSame(
     recalculateFinalSecretsInfo.finalSecrets,
   );
+
+  if (loadingToastId) {
+    toast.dismiss(loadingToastId);
+  }
 
   if (allResultsMatch) {
     toast.success(
@@ -1304,25 +1310,35 @@ export const comparison = async (
 export const performComparison = async (
   serverAddresses: string[],
   biddersIdsInfo: NumberPair,
+  loadingToastId: string,
 ): Promise<void> => {
   let currentWinner = biddersIdsInfo.pop();
-  if (!currentWinner) return;
+  if (!currentWinner) {
+    toast.dismiss(loadingToastId);
+    toast.error('No bidders found to perform comparison', {
+      autoClose: false,
+      closeOnClick: true,
+      draggable: true
+    });
+    return;
+  }
 
   let currentContender;
   let recalculateFinalSecretsInfo;
 
   while (biddersIdsInfo.length > 0) {
     currentContender = biddersIdsInfo.pop();
-    if (currentContender === undefined) return;
+    if (currentContender === undefined) {
+      toast.dismiss(loadingToastId);
+      toast.error('Error during comparison: invalid bidder data', {
+        autoClose: false,
+        closeOnClick: true,
+        draggable: true
+      });
+      return;
+    }
 
     const resetComparisonInfo = await resetComparison(serverAddresses);
-
-    handleToast(
-      resetComparisonInfo,
-      'Reset comparison success!',
-      'Reset comparison failed!',
-    );
-
     const calculateAInfo = await calculateA(serverAddresses);
 
     handleToast(
@@ -1331,15 +1347,11 @@ export const performComparison = async (
       'Calculate A comparison failed!',
     );
 
-    console.log('Sharing random bits...');
-
     for (let round = 0; round < 3; round++) {
       for (let i = 0; i < l + k + 1; i++) {
         await shareRandomBit(serverAddresses, PRIME_NUMBER, i);
       }
     }
-
-    console.log('Shares of random bits sent to all servers');
 
     const calculateShareOfRandomNumberInfo =
       await calculateShareOfRandomNumber(serverAddresses);
@@ -1376,23 +1388,31 @@ export const performComparison = async (
       k,
     );
 
-    const promisesReconstructInfo2 =
-      await recalculateFinalSecrets(serverAddresses);
+    recalculateFinalSecretsInfo = await recalculateFinalSecrets(serverAddresses);
 
     handleToast(
-      promisesReconstructInfo2,
+      recalculateFinalSecretsInfo,
       'Reconstruct secrets success!',
       'Reconstruct secrets failed!',
     );
 
-    console.log(promisesReconstructInfo2);
-    const firstResult = promisesReconstructInfo2.finalSecrets[0][1];
+    const firstResult = recalculateFinalSecretsInfo.finalSecrets[0][1];
 
     if (parseInt(firstResult, 16) === 0) currentWinner = currentContender;
   }
 
-  if (recalculateFinalSecretsInfo === undefined) return;
-  handleWinnerToast(recalculateFinalSecretsInfo, currentWinner);
+  if (recalculateFinalSecretsInfo === undefined) {
+    toast.dismiss(loadingToastId);
+    toast.error('Error determining auction winner - no comparison result', {
+      autoClose: false,
+      closeOnClick: true,
+      draggable: true
+    });
+    return;
+  }
+
+  // Handle final winner announcement
+  handleWinnerToast(recalculateFinalSecretsInfo, currentWinner, loadingToastId);
 };
 
 export const addShares = async (
@@ -1478,11 +1498,10 @@ export async function multiplyShares(
         Authorization: `Bearer ${getTokenForServer(server)}`,
       },
     }).catch((err) =>
-      console.error(`Error redistributing q for ${server}: ${err.message}`),
+      toast.error(`Error redistributing q for ${server}: ${err.message}`),
     ),
   );
   await Promise.all(qTasks);
-  console.log('q values redistributed for all parties');
 
   // Step 2: Redistribute r values
   const rTasks = servers.map((server) =>
@@ -1498,11 +1517,10 @@ export async function multiplyShares(
         second_share_name: secondShareName,
       }),
     }).catch((err) =>
-      console.error(`Error redistributing r for ${server}: ${err.message}`),
+      toast.error(`Error redistributing r for ${server}: ${err.message}`),
     ),
   );
   await Promise.all(rTasks);
-  console.log('r values redistributed for all parties');
 
   // Step 3: Calculate multiplicative shares
   const multiplicativeShareTasks = servers.map((server) =>
@@ -1514,13 +1532,12 @@ export async function multiplyShares(
         Authorization: `Bearer ${getTokenForServer(server)}`,
       },
     }).catch((err) =>
-      console.error(
+      toast.error(
         `Error calculating multiplicative share for ${server}: ${err.message}`,
       ),
     ),
   );
   await Promise.all(multiplicativeShareTasks);
-  console.log('Multiplicative shares calculated for all parties');
 
   // Step 4: Set the result share
   const setResultShareTasks = servers.map((server) =>
@@ -1532,15 +1549,12 @@ export async function multiplyShares(
         Authorization: `Bearer ${getTokenForServer(server)}`,
       },
     }).catch((err) =>
-      console.error(
+      toast.error(
         `Error setting result share ${resultShareName} for ${server}: ${err.message}`,
       ),
     ),
   );
   await Promise.all(setResultShareTasks);
-  console.log(
-    `Result share ${resultShareName} set to multiplicative share for all parties`,
-  );
 }
 
 export const xorShares = async (
@@ -1566,7 +1580,6 @@ export const xorShares = async (
       }),
     ),
   );
-  console.log('Additive shares calculated for all parties');
 
   // Step 2: Redistribute q values
   await Promise.all(
@@ -1581,7 +1594,6 @@ export const xorShares = async (
       }),
     ),
   );
-  console.log('q values redistributed for all parties');
 
   // Step 3: Redistribute r values
   await Promise.all(
@@ -1600,7 +1612,6 @@ export const xorShares = async (
       }),
     ),
   );
-  console.log('r values redistributed for all parties');
 
   // Step 4: Calculate multiplicative share
   await Promise.all(
@@ -1615,7 +1626,6 @@ export const xorShares = async (
       }),
     ),
   );
-  console.log('Multiplicative shares calculated for all parties');
 
   // Step 5: Calculate XOR share
   await Promise.all(
@@ -1630,7 +1640,6 @@ export const xorShares = async (
       }),
     ),
   );
-  console.log('XOR shares calculated for all parties');
 
   // Step 6: Set result share to XOR share
   await Promise.all(
@@ -1644,9 +1653,6 @@ export const xorShares = async (
         },
       }),
     ),
-  );
-  console.log(
-    `Result share ${resultShareName} set to XOR share for all parties`,
   );
 };
 
@@ -1664,7 +1670,6 @@ export const shareRandomU = async (servers: string[]): Promise<void> => {
       }),
     ),
   );
-  console.log('u values redistributed for all parties');
 
   // Step 2: Calculate shared u values
   await Promise.all(
@@ -1679,7 +1684,6 @@ export const shareRandomU = async (servers: string[]): Promise<void> => {
       }),
     ),
   );
-  console.log('Shared u values calculated for all parties');
 };
 
 export function smallestSquareRootModulo(
@@ -1759,7 +1763,6 @@ export async function shareRandomBit(
 
     for (let i = 0; i < results.length; i++) {
       openedV = parseInt(results[i]?.secret, 16);
-      console.log(`v reconstructed for party ${i + 1} with value ${openedV}`);
     }
   }
 
@@ -1883,10 +1886,6 @@ export async function shareRandomBit(
         },
       }),
     ),
-  );
-
-  console.log(
-    `Temporary random bit share for bit ${bitIndex} set for all parties`,
   );
 }
 

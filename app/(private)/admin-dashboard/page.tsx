@@ -22,48 +22,25 @@ import {
 import { toast } from 'react-toastify';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import { useAuth } from '@/app/context/AuthContext';
+import { getServersList } from '@/app/utils/auth';
 
 export default function AdminDashboard() {
   const { user, servers: authServers } = useAuth();
-  const [servers, setServers] = useState<Server[]>([
-    {
-      id: '1',
-      name: 'Server 1',
-      address: 'http://localhost:5001',
-      status: 'offline',
-    },
-    {
-      id: '2',
-      name: 'Server 2',
-      address: 'http://localhost:5002',
-      status: 'offline',
-    },
-    {
-      id: '3',
-      name: 'Server 3',
-      address: 'http://localhost:5003',
-      status: 'offline',
-    },
-    {
-      id: '4',
-      name: 'Server 4',
-      address: 'http://localhost:5004',
-      status: 'offline',
-    },
-    {
-      id: '5',
-      name: 'Server 5',
-      address: 'http://localhost:5005',
-      status: 'offline',
-    },
-  ]);
-  const [t, setT] = useState<number>(0);
-  const [n, setN] = useState<number>(0);
+  const [servers, setServers] = useState<Server[]>([]);
 
   const handleClearData = () => {
-    setT(0);
-    setN(0);
     setServers([]);
+    if (user?.admin) {
+      const savedServers = getServersList();
+      const initialServers: Server[] = savedServers.map((server) => ({
+        id: server,
+        name: server,
+        address: server,
+        status: 'offline' as const,
+      }));
+      setServers(initialServers);
+      handleAllServersStatus(initialServers, setServers);
+    } 
   };
 
   // Initialize available servers from auth context
@@ -73,20 +50,33 @@ export default function AdminDashboard() {
   const handleStartAuction = async () => {
     const serverAddresses = getServerAddresses(servers);
 
-    toast.loading('Starting the auction!');
-    toast.dismiss();
+    const loadingToastId = toast.loading('Auction in progress - comparing bids...', {
+      closeOnClick: false,
+      draggable: false,
+      autoClose: false
+    }) as unknown as string; // Cast the toast ID to string
 
     const biddersIdsInfo = await getBiddersIds(serverAddresses);
+    if (typeof biddersIdsInfo === 'string') {
+      toast.dismiss(loadingToastId);
+      toast.error('Failed to retrieve bidder IDs: ' + biddersIdsInfo, {
+        autoClose: false,
+        closeOnClick: true,
+        draggable: true
+      });
+      return;
+    }
 
-    handleBiddersIdsToast(
-      biddersIdsInfo,
-      'Successfully retrieved bidder IDs!',
-      'Failed to retrieve bidder IDs!',
-    );
-
-    if (typeof biddersIdsInfo === 'string') return;
-
-    await performComparison(serverAddresses, biddersIdsInfo);
+    try {
+      await performComparison(serverAddresses, biddersIdsInfo, loadingToastId);
+    } catch (err: any) {
+      toast.dismiss(loadingToastId);
+      toast.error('An error occurred during the auction process: ' + (err?.message || 'Unknown error'), {
+        autoClose: false,
+        closeOnClick: true,
+        draggable: true
+      });
+    }
   };
 
   const handleSendInitialData = () => {
@@ -98,13 +88,38 @@ export default function AdminDashboard() {
     sendInitialData(serverAddresses);
   };
 
+  useEffect(() => {
+    let cleanupServerChecks: (() => void) | undefined;
+
+    if (user?.admin) {
+      const savedServers = getServersList();
+      const initialServers: Server[] = savedServers.map((server) => ({
+        id: server,
+        name: server,
+        address: server,
+        status: 'offline' as const,
+      }));
+      setServers(initialServers);
+      
+      cleanupServerChecks = handleAllServersStatus(initialServers, setServers);
+    } else {
+      setServers([]);
+    }
+
+    return () => {
+      if (cleanupServerChecks) {
+        cleanupServerChecks();
+      }
+  };
+  }, [user, authServers]);
+
   return (
     <ProtectedRoute adminOnly>
       <Navbar isLogged />
       <main className='container py-6'>
         <div className='flex flex-col gap-6 items-start lg:flex-row'>
-          <div className='w-full flex flex-col gap-6 lg:w-1/2'>
-            <div className='w-full bg-secondary border border-primary-border p-6 rounded-xl shadow-sm'>
+          <div className='w-full h-full flex flex-row gap-6 lg:h-1/2'>
+            <div className='h-full w-full bg-secondary border border-primary-border p-6 rounded-xl shadow-sm'>
               <h2 className='text-xl font-bold tracking-wide font-headline lg:text-2xl'>
                 Action buttons
               </h2>

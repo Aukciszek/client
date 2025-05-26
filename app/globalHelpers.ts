@@ -1,4 +1,3 @@
-import Cookies from 'universal-cookie';
 import { getServersList, getTokenForServer } from './utils/auth';
 import { toast } from 'react-toastify';
 import type { Server, SetNumber } from './globalInterface';
@@ -17,14 +16,9 @@ export const getInitialValues = async (
   const messageInfo: string[] = [];
 
   // Log the server we're trying to get a token for
-  console.log('Requesting token for server:', initialValuesServer);
   const token = getTokenForServer(initialValuesServer);
 
   if (!token) {
-    console.error('No token found in cookies for server:', initialValuesServer);
-    const cookies = new Cookies();
-    const allTokens = cookies.get('access_tokens');
-    console.log('All available tokens:', allTokens);
     toast.error('Authentication token not found. Please try logging in again.');
     return;
   }
@@ -33,7 +27,6 @@ export const getInitialValues = async (
   const serverUrl = initialValuesServer.endsWith('/')
     ? initialValuesServer
     : `${initialValuesServer}/`;
-  console.log('Making request to:', `${serverUrl}api/initial-values`);
 
   await fetch(`${serverUrl}api/initial-values`, {
     headers: {
@@ -89,6 +82,7 @@ export const checkServerStatus = async (server: string): Promise<boolean> => {
     const timeoutId = setTimeout(() => controller.abort(), REFRESH_INTERVAL); // 10 second timeout
 
     try {
+      console.log(`Checking status for server: ${serverUrl}`);
       await fetch(`${serverUrl}api/status`, {
         headers: {
           'Content-Type': 'application/json',

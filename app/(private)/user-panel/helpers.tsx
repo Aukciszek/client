@@ -9,49 +9,86 @@ export const handleShamir = async (
   n: number,
   servers: string[],
 ): Promise<void> => {
-  const shares = shamir(t, n, BigInt(secret))[0];
+  const loadingToast = toast.loading(<div>Processing auction bid...</div>, {
+    closeOnClick: false,
+    draggable: false,
+    autoClose: false
+  });
 
-  const messageInfo: [string, string][] = [];
-  const errorInfo: [string, string][] = [];
+  try {
+    const shares = shamir(t, n, BigInt(secret))[0];
 
-  await Promise.all(
-    servers.map((server, i) =>
-      fetch(`${server}/api/set-client-shares`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          Authorization: `Bearer ${getTokenForServer(server)}`,
-        },
-        body: JSON.stringify({
-          share: shares[i][1].toString(16),
-        }),
-      })
-        .then(async (res) => {
-          const data = await res.json();
-          if (!res.ok) {
-            errorInfo.push([server, data.detail]);
-            return;
-          }
-          messageInfo.push([server, data.result]);
+    const messageInfo: [string, string][] = [];
+    const errorInfo: [string, string][] = [];
+
+    await Promise.all(
+      servers.map((server, i) =>
+        fetch(`${server}/api/set-client-shares`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Authorization: `Bearer ${getTokenForServer(server)}`,
+          },
+          body: JSON.stringify({
+            share: shares[i][1].toString(16),
+          }),
         })
-        .catch((err) => {
-          errorInfo.push([server, err.message]);
-        }),
-    ),
-  );
+          .then(async (res) => {
+            const data = await res.json();
+            if (!res.ok) {
+              errorInfo.push([server, data.detail]);
+              return;
+            }
+            messageInfo.push([server, data.result]);
+          })
+          .catch((err) => {
+            errorInfo.push([server, err.message]);
+          }),
+      ),
+    );
 
-  if (errorInfo.length !== 0 && areAllValuesTheSame(errorInfo)) {
-    toast.error(<div>{errorInfo[0][1]}</div>);
-    return;
+    if (errorInfo.length !== 0 && areAllValuesTheSame(errorInfo)) {
+      toast.dismiss(loadingToast);
+      toast.error(<div>{errorInfo[0][1]}</div>, {
+        autoClose: false,
+        closeOnClick: true,
+        draggable: true
+      });
+      return;
+    }
+
+    if (messageInfo.length !== 0 && areAllValuesTheSame(messageInfo)) {
+      toast.dismiss(loadingToast);
+      toast.success(<div>Successfully submitted bid. Please wait for auction results...</div>, {
+        autoClose: false,
+        closeOnClick: true,
+        draggable: true
+      });
+      return;
+    }
+
+    toast.dismiss(loadingToast);
+    toast.error(<div>Something went wrong while submitting bid</div>, {
+      autoClose: false,
+      closeOnClick: true,
+      draggable: true
+    });
+  } catch (err) {
+    toast.dismiss(loadingToast);
+    toast.error(
+      err instanceof Error ? (
+        <div>Error submitting bid: {err.message}</div>
+      ) : (
+        <div>An unknown error occurred while submitting bid</div>
+      ),
+      {
+        autoClose: false,
+        closeOnClick: true,
+        draggable: true
+      }
+    );
   }
-
-  if (messageInfo.length !== 0 && areAllValuesTheSame(messageInfo)) {
-    toast.success(<div>Successfully submitted bid</div>);
-    return;
-  }
-
-  toast.error(<div>Something went wrong while submitting bid</div>);
 };
 
 export function shamir(

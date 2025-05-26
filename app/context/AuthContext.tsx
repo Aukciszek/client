@@ -3,12 +3,13 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import {
   getToken,
-  removeToken,
+  removeCookie,
   setToken,
   getUserFromToken,
   setTokens,
   parseTokensListAndServers,
   getServersList,
+  setServersListCookie,
 } from '../utils/auth';
 
 interface User {
@@ -71,7 +72,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             admin: userData.isAdmin,
           });
         }
-        // Get saved servers list
         const savedServers = getServersList();
         setServers(savedServers);
       }
@@ -116,6 +116,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
       setServers(serverList);
       setTokens(tokens);
+      setServersListCookie(serverList);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Failed to validate login';
@@ -124,7 +125,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logout = () => {
-    removeToken();
+    removeCookie('access_token');
+    removeCookie('access_tokens');
+    removeCookie('servers_list');
     setUser(null);
     setServers([]);
   };
