@@ -333,16 +333,13 @@ export const handleMultiplication = async (
   const messageErrorReconstruct: [string, number][] = [];
 
   const promisesReconstruct = servers.map((server) =>
-    fetch(`${server}/api/reconstruct-secret`, {
+    fetch(`${server}/api/reconstruct-secret/comparison_a`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
         Authorization: `Bearer ${getTokenForServer(server)}`,
       },
-      body: JSON.stringify({
-        share_to_reconstruct: 'comparison_a',
-      }),
     })
       .then(async (res) => {
         const data = await res.json();

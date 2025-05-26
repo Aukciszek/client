@@ -418,16 +418,13 @@ export const promisesReconstruct = async (
 
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}/api/reconstruct-secret`, {
-        method: 'POST',
+      fetch(`${server}/api/reconstruct-secret/comparison_a`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
           Authorization: `Bearer ${getTokenForServer(server)}`,
         },
-        body: JSON.stringify({
-          share_to_reconstruct: 'comparison_a',
-        }),
       })
         .then(async (res) => {
           const data = await res.json();
@@ -530,16 +527,13 @@ export const recalculateFinalSecrets = async (
 
   await Promise.all(
     servers.map((server) =>
-      fetch(`${server}/api/reconstruct-secret`, {
-        method: 'POST',
+      fetch(`${server}/api/reconstruct-secret/res`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
           Authorization: `Bearer ${getTokenForServer(server)}`,
         },
-        body: JSON.stringify({
-          share_to_reconstruct: 'res',
-        }),
       })
         .then(async (res) => {
           const data = await res.json();
@@ -1747,16 +1741,13 @@ export async function shareRandomBit(
     // Reconstruct secret
     const results = await Promise.all(
       parties.map((party) =>
-        fetch(`${party}/api/reconstruct-secret`, {
-          method: 'POST',
+        fetch(`${party}/api/reconstruct-secret/v`, {
+          method: 'GET',
           headers: {
             'Content-Type': 'application/json',
             Accept: 'application/json',
             Authorization: `Bearer ${getTokenForServer(party)}`,
           },
-          body: JSON.stringify({
-            share_to_reconstruct: 'v',
-          }),
         }).then((res) => res.json()),
       ),
     );
