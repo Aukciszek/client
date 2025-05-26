@@ -139,8 +139,6 @@ export const hardReset = async (
             return;
           }
           messageInfo.push([server, data.result]);
-          handleClearData();
-          getServersList()
         })
         .catch((err) => {
           errorInfo.push([server, err.message]);
@@ -154,6 +152,8 @@ export const hardReset = async (
   }
 
   if (messageInfo.length !== 0 && areAllValuesTheSame(messageInfo)) {
+    // Only call handleClearData once after successful reset of all servers
+    handleClearData();
     toast.success(<div>All servers have been successfully reset</div>);
     return;
   }

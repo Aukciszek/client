@@ -25,7 +25,7 @@ interface DecodedToken {
 }
 
 interface TokenInfo {
-  access_token: string; // Changed from token to access_token to match auth.ts
+  access_token: string;
   server: string;
 }
 

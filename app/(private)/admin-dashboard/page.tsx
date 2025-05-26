@@ -18,6 +18,7 @@ import {
   getServerAddresses,
   handleAllServersStatus,
   handleCheckStatus,
+  resetServerStatusInterval,
 } from '../../globalHelpers';
 import { toast } from 'react-toastify';
 import ProtectedRoute from '../../components/ProtectedRoute';
@@ -39,7 +40,8 @@ export default function AdminDashboard() {
         status: 'offline' as const,
       }));
       setServers(initialServers);
-      handleAllServersStatus(initialServers, setServers);
+      // Reset the interval when clearing data
+      resetServerStatusInterval(initialServers, setServers);
     } 
   };
 

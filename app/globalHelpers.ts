@@ -4,6 +4,21 @@ import type { Server, SetNumber } from './globalInterface';
 import type { Dispatch, SetStateAction } from 'react';
 import { REFRESH_INTERVAL } from './constants';
 
+// Track the current interval ID and pending checks
+let currentIntervalId: NodeJS.Timeout | null = null;
+let isChecking = false;
+
+export const resetServerStatusInterval = (
+  servers: Server[],
+  setServers: Dispatch<SetStateAction<Server[]>>,
+): void => {
+  if (isChecking) return; // Skip if already checking
+  // Check status without resetting interval
+  servers.forEach((server) => {
+    handleCheckStatus(server.id, servers, setServers);
+  });
+};
+
 export const getServerAddresses = (servers: Server[]): string[] =>
   servers.map((server) => server.address);
 
@@ -131,18 +146,33 @@ export const handleAllServersStatus = (
   servers: Server[],
   setServers: Dispatch<SetStateAction<Server[]>>,
 ): (() => void) => {
+  // Clear any existing interval
+  if (currentIntervalId) {
+    clearInterval(currentIntervalId);
+  }
+
+  // Function to check all servers
+  const checkAllServers = async () => {
+    if (isChecking) return; // Skip if already checking
+    isChecking = true;
+
+    await Promise.all(servers.map(server => 
+      handleCheckStatus(server.id, servers, setServers)
+    ));
+
+    isChecking = false;
+  };
+
   // Check status immediately
-  servers.forEach((server) => {
-    handleCheckStatus(server.id, servers, setServers);
-  });
+  checkAllServers();
 
   // Set up automatic refresh every 10 seconds
-  const intervalId = setInterval(() => {
-    servers.forEach((server) => {
-      handleCheckStatus(server.id, servers, setServers);
-    });
-  }, REFRESH_INTERVAL);
-
+  currentIntervalId = setInterval(checkAllServers, REFRESH_INTERVAL);
   // Return cleanup function to clear the interval
-  return () => clearInterval(intervalId);
+  return () => {
+    if (currentIntervalId) {
+      clearInterval(currentIntervalId);
+      currentIntervalId = null;
+    }
+  };
 };
