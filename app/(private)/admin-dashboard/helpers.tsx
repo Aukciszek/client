@@ -1306,6 +1306,8 @@ export const performComparison = async (
   biddersIdsInfo: NumberPair,
   loadingToastId: string,
 ): Promise<void> => {
+  // biddersIds sorted a-z
+  // console.log(biddersIdsInfo);
   let currentWinner = biddersIdsInfo.pop();
   if (!currentWinner) {
     toast.dismiss(loadingToastId);
@@ -1332,13 +1334,19 @@ export const performComparison = async (
       return;
     }
 
-    const resetComparisonInfo = await resetComparison(serverAddresses);
+    let resetComparisonInfo = await resetComparison(serverAddresses);
     const calculateAInfo = await calculateA(serverAddresses);
 
     handleToast(
+      resetComparisonInfo,
+      'Comparison reset',
+      'Comparison reset failed!',
+    );
+
+    handleToast(
       calculateAInfo,
-      'Calculate A comparison success!',
-      'Calculate A comparison failed!',
+      'Calculated matrix A',
+      'Calculate matrix A failed!',
     );
 
     for (let round = 0; round < 3; round++) {
@@ -1363,8 +1371,8 @@ export const performComparison = async (
 
     handleToast(
       calculateAComparisonInfo,
-      'Calculate A comparison success!',
-      'Calculate A comparison failed!',
+      'Calculate a comparison success!',
+      'Calculate a comparison failed!',
     );
 
     const promisesReconstructInfo = await promisesReconstruct(serverAddresses);
@@ -1392,7 +1400,13 @@ export const performComparison = async (
 
     const firstResult = recalculateFinalSecretsInfo.finalSecrets[0][1];
 
-    if (parseInt(firstResult, 16) === 0) currentWinner = currentContender;
+    // reverse auction - find the smallest bid
+    // if the result of comparison is 1 (currentWinner >= currentContender)
+    // than change currentWinner = currentContender
+    if (parseInt(firstResult, 16) === 1){
+      // console.log("change currentWinner");
+      currentWinner = currentContender;
+    }
   }
 
   if (recalculateFinalSecretsInfo === undefined) {
