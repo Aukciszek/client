@@ -134,7 +134,6 @@ bun start
 ### Core Components
 
 - **Navbar**: Main navigation with authentication state
-- **Landing**: Hero section and main call-to-action
 - **HowItWorks**: Explanation of auction process
 - **Footer**: Site footer with links and information
 
@@ -241,4 +240,4 @@ The application communicates with a backend server for:
 
 ## License
 
-- Apache License 2.0
+- This project is licensed under the GNU General Public License v3.0
