@@ -1334,7 +1334,7 @@ export const performComparison = async (
       return;
     }
 
-    let resetComparisonInfo = await resetComparison(serverAddresses);
+    const resetComparisonInfo = await resetComparison(serverAddresses);
     const calculateAInfo = await calculateA(serverAddresses);
 
     handleToast(
