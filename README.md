@@ -115,6 +115,20 @@ pnpm build
 bun build
 ```
 
+### Initial parameters
+
+In order for the auction to work properly, user needs to keep constant.ts file up to date with valid initial data.
+
+Some data like *PRIME_NUMBER*, *l* and *k* needs to match between all participants.
+
+*LOGIN_SERVER* should possess data allowing user to connect to rest of the servers
+
+*l* value sets maximum number of bith a bid value may have.
+
+Prime number must be populated according to the following formula: p >= 2^(l+k+1) + 2^(l+1)
+
+Same prime number can be used multiple times
+
 ### Start
 
 Start the production server:
@@ -128,6 +142,10 @@ pnpm start
 # or
 bun start
 ```
+
+### Performance
+
+Warning! In case of high *PRIME_NUMBER* values, the auction can take much time to complete (above 1h)
 
 ## Component Architecture
 

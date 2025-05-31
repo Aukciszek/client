@@ -8,4 +8,6 @@ export interface FormFieldProps {
   placeholder?: string;
   type: string;
   disabled?: boolean;
+  minValue?: number;
+  maxValue?: number;
 }

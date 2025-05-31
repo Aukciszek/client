@@ -1303,6 +1303,11 @@ export const performComparison = async (
   let currentWinner = biddersIdsInfo.pop();
   if (!currentWinner) {
     toast.dismiss(loadingToastId);
+    toast.error('No bidders found to perform comparison', {
+      autoClose: false,
+      closeOnClick: true,
+      draggable: true
+    });
     return;
   }
 

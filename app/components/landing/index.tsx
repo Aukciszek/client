@@ -20,7 +20,7 @@ export default function Landing() {
           <Link href='/sign-up'>
             <Button variant='default'>Get Started</Button>
           </Link>
-          <Link href='/about'>
+          <Link href='https://github.com/Aukciszek/client'>
             <Button variant='outline'>Learn More</Button>
           </Link>
         </div>
