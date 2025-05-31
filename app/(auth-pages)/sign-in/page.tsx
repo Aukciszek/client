@@ -91,7 +91,6 @@ export default function SigninPage() {
           value={password}
           setValue={setPassword}
           type='password'
-          forgotPassowrd
         />
         <FormActions isLoading={isLoading} isSignIn />
       </Form>

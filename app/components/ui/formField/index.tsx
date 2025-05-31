@@ -13,21 +13,12 @@ export default function formField({
   setValue,
   placeholder,
   type,
-  forgotPassowrd,
   disabled = false,
 }: FormFieldProps) {
   return (
     <div className='w-full flex flex-col gap-2'>
-      {forgotPassowrd ? (
-        <div className='flex items-center justify-between'>
-          <Label htmlFor='password'>Password</Label>
-          <Link href='/forgot-password' className='text-xs underline'>
-            Forgot password?
-          </Link>
-        </div>
-      ) : (
-        <Label htmlFor={id}>{text}</Label>
-      )}
+      <Label htmlFor={id}>{text}</Label>
+
       <Input
         id={id}
         name={id}

@@ -3,10 +3,10 @@ import type { NextRequest } from 'next/server';
 import { toast } from 'react-toastify';
 
 // No authentication required
-const publicPaths = ['/privacy', '/about', '/terms'];
+const publicPaths = ['/'];
 
 // Non-authenticated only
-const authPaths = ['/sign-in', '/sign-up', '/forgot-password'];
+const authPaths = ['/sign-in', '/sign-up'];
 
 // Admin only
 const adminPaths = ['/admin-dashboard'];

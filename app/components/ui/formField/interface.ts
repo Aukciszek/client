@@ -7,6 +7,5 @@ export interface FormFieldProps {
   setValue?: Dispatch<SetStateAction<string>>;
   placeholder?: string;
   type: string;
-  forgotPassowrd?: boolean;
   disabled?: boolean;
 }
