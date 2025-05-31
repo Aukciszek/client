@@ -353,14 +353,12 @@ export const calculateShareOfRandomNumber = async (
         .then(async (res) => {
           const data = await res.json();
           if (!res.ok) {
-            toast.error(`Error on server ${server}: ${data.detail}`);
             errorInfo.push([server, data.detail]);
             return;
           }
           messageInfo.push([server, data.result]);
         })
         .catch((err) => {
-          toast.error(`Error on server ${server}: ${err.message}`);
           errorInfo.push([server, err.message]);
         }),
     ),
@@ -1306,48 +1304,27 @@ export const performComparison = async (
   biddersIdsInfo: NumberPair,
   loadingToastId: string,
 ): Promise<void> => {
-  // biddersIds sorted a-z
-  // console.log(biddersIdsInfo);
+
   let currentWinner = biddersIdsInfo.pop();
   if (!currentWinner) {
     toast.dismiss(loadingToastId);
-    toast.error('No bidders found to perform comparison', {
-      autoClose: false,
-      closeOnClick: true,
-      draggable: true
-    });
     return;
   }
 
   let currentContender;
   let recalculateFinalSecretsInfo;
 
+  await calculateA(serverAddresses);
+
   while (biddersIdsInfo.length > 0) {
     currentContender = biddersIdsInfo.pop();
     if (currentContender === undefined) {
       toast.dismiss(loadingToastId);
-      toast.error('Error during comparison: invalid bidder data', {
-        autoClose: false,
-        closeOnClick: true,
-        draggable: true
-      });
       return;
     }
-
-    let resetComparisonInfo = await resetComparison(serverAddresses);
-    const calculateAInfo = await calculateA(serverAddresses);
-
-    handleToast(
-      resetComparisonInfo,
-      'Comparison reset',
-      'Comparison reset failed!',
-    );
-
-    handleToast(
-      calculateAInfo,
-      'Calculated matrix A',
-      'Calculate matrix A failed!',
-    );
+    
+    await resetComparison(serverAddresses);
+    
 
     for (let round = 0; round < 3; round++) {
       for (let i = 0; i < l + k + 1; i++) {
@@ -1355,33 +1332,14 @@ export const performComparison = async (
       }
     }
 
-    const calculateShareOfRandomNumberInfo =
-      await calculateShareOfRandomNumber(serverAddresses);
+    await calculateShareOfRandomNumber(serverAddresses);
 
-    handleToast(
-      calculateShareOfRandomNumberInfo,
-      'Reconstruct secrets success!',
-      'Reconstruct secrets failed!',
-    );
-
-    const calculateAComparisonInfo = await calculateAComparison(
+    await calculateAComparison(
       serverAddresses,
       [currentWinner, currentContender],
     );
 
-    handleToast(
-      calculateAComparisonInfo,
-      'Calculate a comparison success!',
-      'Calculate a comparison failed!',
-    );
-
     const promisesReconstructInfo = await promisesReconstruct(serverAddresses);
-
-    handleToast(
-      promisesReconstructInfo,
-      'Reconstruct secrets success!',
-      'Reconstruct secrets failed!',
-    );
 
     await comparison(
       serverAddresses,
@@ -1391,12 +1349,6 @@ export const performComparison = async (
     );
 
     recalculateFinalSecretsInfo = await recalculateFinalSecrets(serverAddresses);
-
-    handleToast(
-      recalculateFinalSecretsInfo,
-      'Reconstruct secrets success!',
-      'Reconstruct secrets failed!',
-    );
 
     const firstResult = recalculateFinalSecretsInfo.finalSecrets[0][1];
 
@@ -1411,7 +1363,7 @@ export const performComparison = async (
 
   if (recalculateFinalSecretsInfo === undefined) {
     toast.dismiss(loadingToastId);
-    toast.error('Error determining auction winner - no comparison result', {
+    toast.error('Error determining auction winner', {
       autoClose: false,
       closeOnClick: true,
       draggable: true
