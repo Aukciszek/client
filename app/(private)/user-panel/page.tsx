@@ -17,6 +17,7 @@ import { handleShamir } from './helpers';
 import { toast } from 'react-toastify';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import { useAuth } from '@/app/context/AuthContext';
+import { REFRESH_INTERVAL } from '@/app/constants';
 
 export default function ClientDashboard() {
   const { user, servers: authServers } = useAuth();
@@ -25,8 +26,6 @@ export default function ClientDashboard() {
 
   // Initialize available servers from auth context and check their status
   useEffect(() => {
-    let cleanupServerChecks: (() => void) | undefined;
-
     if (user) {
       const initialServers: Server[] = authServers.map((server) => ({
         id: server,
@@ -37,19 +36,23 @@ export default function ClientDashboard() {
       setServers(initialServers);
 
       // Start server status checks
-      cleanupServerChecks = handleAllServersStatus(initialServers, setServers);
+      handleAllServersStatus(initialServers, setServers);
     } else {
       // Clear servers if user logs out
       setServers([]);
     }
 
     // Cleanup function will be called when component unmounts or user logs out
-    return () => {
-      if (cleanupServerChecks) {
-        cleanupServerChecks();
-      }
-    };
+    return;
   }, [authServers, user]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      handleAllServersStatus(servers, setServers);
+    }, REFRESH_INTERVAL);
+
+    return () => clearInterval(interval);
+  }, [servers]);
 
   const refreshServerList = () => {
     if (servers.length > 0) {

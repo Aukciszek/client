@@ -1,6 +1,6 @@
 import { toast } from 'react-toastify';
 import { k, l, PRIME_NUMBER } from '../../constants';
-import { getServersList, getTokenForServer } from '../../utils/auth';
+import { getTokenForServer } from '../../utils/auth';
 import type {
   PromiseResultFinalSecrets,
   PromiseResultWithSecrets,
@@ -1324,7 +1324,6 @@ export const performComparison = async (
     }
     
     await resetComparison(serverAddresses);
-    
 
     for (let round = 0; round < 3; round++) {
       for (let i = 0; i < l + k + 1; i++) {
@@ -1356,7 +1355,6 @@ export const performComparison = async (
     // if the result of comparison is 1 (currentWinner >= currentContender)
     // than change currentWinner = currentContender
     if (parseInt(firstResult, 16) === 1){
-      // console.log("change currentWinner");
       currentWinner = currentContender;
     }
   }

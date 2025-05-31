@@ -1,33 +1,40 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import Button from '../../components/ui/button';
 import Footer from '../../components/footer';
 import Navbar from '../../components/navbar';
-import { MdCloudUpload, MdGavel, MdOutlineRefresh, MdRestore } from 'react-icons/md';
+import {
+  MdCloudUpload,
+  MdGavel,
+  MdOutlineRefresh,
+  MdRestore,
+} from 'react-icons/md';
 import type { Server } from './interface';
 import {
   getBiddersIds,
-  handleBiddersIdsToast,
   hardReset,
   performComparison,
   sendInitialData,
 } from './helpers';
 import {
-  getInitialValues,
   getServerAddresses,
   handleAllServersStatus,
   handleCheckStatus,
-  resetServerStatusInterval,
 } from '../../globalHelpers';
 import { toast } from 'react-toastify';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import { useAuth } from '@/app/context/AuthContext';
 import { getServersList } from '@/app/utils/auth';
+import { REFRESH_INTERVAL } from '@/app/constants';
 
 export default function AdminDashboard() {
   const { user, servers: authServers } = useAuth();
   const [servers, setServers] = useState<Server[]>([]);
+  const [isAuctionInProgress, setIsAuctionInProgress] =
+    useState<boolean>(false);
+  const [isInitialServersListLoaded, setIsInitialServersListLoaded] =
+    useState<boolean>(false);
 
   const handleClearData = () => {
     setServers([]);
@@ -40,9 +47,9 @@ export default function AdminDashboard() {
         status: 'offline' as const,
       }));
       setServers(initialServers);
-      // Reset the interval when clearing data
-      resetServerStatusInterval(initialServers, setServers);
-    } 
+      // Perform a single status check
+      handleAllServersStatus(initialServers, setServers);
+    }
   };
 
   // Initialize available servers from auth context
@@ -52,11 +59,15 @@ export default function AdminDashboard() {
   const handleStartAuction = async () => {
     const serverAddresses = getServerAddresses(servers);
 
-    const loadingToastId = toast.loading('Auction in progress - comparing bids...', {
-      closeOnClick: false,
-      draggable: false,
-      autoClose: false
-    }) as unknown as string; // Cast the toast ID to string
+    const loadingToastId = toast.loading(
+      'Auction in progress - comparing bids...',
+      {
+        closeOnClick: false,
+        draggable: false,
+        autoClose: false,
+      },
+    ) as unknown as string; // Cast the toast ID to string
+    setIsAuctionInProgress(true);
 
     const biddersIdsInfo = await getBiddersIds(serverAddresses);
     if (typeof biddersIdsInfo === 'string') {
@@ -64,20 +75,38 @@ export default function AdminDashboard() {
       toast.error('Failed to retrieve bidder IDs: ' + biddersIdsInfo, {
         autoClose: false,
         closeOnClick: true,
-        draggable: true
+        draggable: true,
       });
+      setIsAuctionInProgress(false);
+      return;
+    }
+
+    if (serverAddresses.length < 2) {
+      toast.dismiss(loadingToastId);
+      toast.error('Not enough bidders found for the auction.', {
+        autoClose: false,
+        closeOnClick: true,
+        draggable: true,
+      });
+      setIsAuctionInProgress(false);
       return;
     }
 
     try {
       await performComparison(serverAddresses, biddersIdsInfo, loadingToastId);
+      setIsAuctionInProgress(false);
     } catch (err: any) {
       toast.dismiss(loadingToastId);
-      toast.error('An error occurred during the auction process: ' + (err?.message || 'Unknown error'), {
-        autoClose: false,
-        closeOnClick: true,
-        draggable: true
-      });
+      toast.error(
+        'An error occurred during the auction process: ' +
+          (err?.message || 'Unknown error'),
+        {
+          autoClose: false,
+          closeOnClick: true,
+          draggable: true,
+        },
+      );
+      setIsAuctionInProgress(false);
     }
   };
 
@@ -91,8 +120,6 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    let cleanupServerChecks: (() => void) | undefined;
-
     if (user?.admin) {
       const savedServers = getServersList();
       const initialServers: Server[] = savedServers.map((server) => ({
@@ -102,18 +129,37 @@ export default function AdminDashboard() {
         status: 'offline' as const,
       }));
       setServers(initialServers);
-      
-      cleanupServerChecks = handleAllServersStatus(initialServers, setServers);
+      setIsInitialServersListLoaded(true);
+
+      // Initial server status check
+      handleAllServersStatus(initialServers, setServers);
     } else {
       setServers([]);
     }
-
-    return () => {
-      if (cleanupServerChecks) {
-        cleanupServerChecks();
-      }
-  };
   }, [user, authServers]);
+
+  // Set up interval for server status checking using handleAllServersStatus
+  useEffect(() => {
+    if (servers.length === 0) return;
+
+    // Function to check all servers at once
+    const checkAllServers = () => {
+      if (!isAuctionInProgress && isInitialServersListLoaded) {
+        handleAllServersStatus(servers, setServers);
+      }
+    };
+
+    // Set up automatic refresh
+    const intervalId = setInterval(checkAllServers, REFRESH_INTERVAL);
+
+    // Initial check
+    checkAllServers();
+
+    // Cleanup on unmount or dependency change
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [isAuctionInProgress, isInitialServersListLoaded]);
 
   return (
     <ProtectedRoute adminOnly>
@@ -142,6 +188,7 @@ export default function AdminDashboard() {
                     <Button
                       style='w-full flex gap-2 justify-center items-center'
                       variant='outline'
+                      disabled={isAuctionInProgress}
                       onClick={() =>
                         hardReset(getServerAddresses(servers), handleClearData)
                       }
@@ -206,14 +253,18 @@ export default function AdminDashboard() {
                           <td className='basis-2/10 flex justify-center sm:basis-1/10'>
                             <Button
                               variant='ghost'
-                              onClick={() =>
+                              onClick={() => {
                                 handleCheckStatus(
                                   server.id,
                                   servers,
                                   setServers,
-                                )
+                                  isAuctionInProgress,
+                                );
+                              }}
+                              disabled={
+                                server.status === 'checking' ||
+                                isAuctionInProgress
                               }
-                              disabled={server.status === 'checking'}
                             >
                               <MdOutlineRefresh
                                 className={`h-4 w-4 ${server.status === 'checking' ? 'animate-spin' : ''}`}

@@ -5,7 +5,6 @@ import type { Dispatch, SetStateAction } from 'react';
 import { REFRESH_INTERVAL } from './constants';
 
 // Track the current interval ID and pending checks
-let currentIntervalId: NodeJS.Timeout | null = null;
 let isChecking = false;
 
 export const resetServerStatusInterval = (
@@ -90,39 +89,42 @@ export const getInitialValues = async (
     });
 };
 
-export const checkServerStatus = async (server: string): Promise<boolean> => {
-  try {
-    const serverUrl = server.endsWith('/') ? server : `${server}/`;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), REFRESH_INTERVAL); // 10 second timeout
-
+export const checkServerStatus = async (server: string, isLoading: boolean): Promise<boolean> => {
+  if (!isLoading) {
     try {
-      console.log(`Checking status for server: ${serverUrl}`);
-      await fetch(`${serverUrl}api/status`, {
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          Authorization: `Bearer ${getTokenForServer(server)}`,
-        },
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-      return true;
-    } catch (error: unknown) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        // Request was aborted due to timeout
+      const serverUrl = server.endsWith('/') ? server : `${server}/`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), REFRESH_INTERVAL); // 10 second timeout
+
+      try {
+        await fetch(`${serverUrl}api/status`, {
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Authorization: `Bearer ${getTokenForServer(server)}`,
+          },
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        return true;
+      } catch (error: unknown) {
+        if (error instanceof Error && error.name === 'AbortError') {
+          // Request was aborted due to timeout
+        }
+        return false;
       }
+    } catch {
       return false;
     }
-  } catch {
-    return false;
   }
+  return true;
 };
 
 export const handleCheckStatus = async (
   id: string,
   servers: Server[],
   setServers: Dispatch<SetStateAction<Server[]>>,
+  isLoading: boolean = false,
 ): Promise<void> => {
   const server = servers.find((s) => s.id === id);
   if (!server) return;
@@ -132,7 +134,7 @@ export const handleCheckStatus = async (
     prev.map((s) => (s.id === id ? { ...s, status: 'checking' } : s)),
   );
 
-  const isOnline = await checkServerStatus(server.address);
+  const isOnline = await checkServerStatus(server.address, isLoading);
 
   // Update status for just this server
   setServers((prev) =>
@@ -145,19 +147,15 @@ export const handleCheckStatus = async (
 export const handleAllServersStatus = (
   servers: Server[],
   setServers: Dispatch<SetStateAction<Server[]>>,
-): (() => void) => {
-  // Clear any existing interval
-  if (currentIntervalId) {
-    clearInterval(currentIntervalId);
-  }
-
+  isLoading: boolean = false,
+): void => {
   // Function to check all servers
   const checkAllServers = async () => {
     if (isChecking) return; // Skip if already checking
     isChecking = true;
 
     await Promise.all(servers.map(server => 
-      handleCheckStatus(server.id, servers, setServers)
+      handleCheckStatus(server.id, servers, setServers, isLoading)
     ));
 
     isChecking = false;
@@ -165,14 +163,4 @@ export const handleAllServersStatus = (
 
   // Check status immediately
   checkAllServers();
-
-  // Set up automatic refresh every 10 seconds
-  currentIntervalId = setInterval(checkAllServers, REFRESH_INTERVAL);
-  // Return cleanup function to clear the interval
-  return () => {
-    if (currentIntervalId) {
-      clearInterval(currentIntervalId);
-      currentIntervalId = null;
-    }
-  };
 };
