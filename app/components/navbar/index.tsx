@@ -28,7 +28,7 @@ export default function Navbar({ isLogged }: NavbarProps) {
         {isLogged || isAuthenticated ? (
           <>
             <span className='text-sm hidden md:block'>
-              Hello, {displayName}
+              User ID: {displayName}
             </span>
             <Button variant='default' onClick={handleLogout}>
               Logout

@@ -26,7 +26,8 @@ import { toast } from 'react-toastify';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import { useAuth } from '@/app/context/AuthContext';
 import { getServersList } from '@/app/utils/auth';
-import { REFRESH_INTERVAL } from '@/app/constants';
+import { REFRESH_INTERVAL, PRIME_NUMBER, l, k } from '@/app/constants';
+import { dataValidation } from '../../globalHelpers';
 
 export default function AdminDashboard() {
   const { user, servers: authServers } = useAuth();
@@ -95,6 +96,7 @@ export default function AdminDashboard() {
     try {
       await performComparison(serverAddresses, biddersIdsInfo, loadingToastId);
       setIsAuctionInProgress(false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       toast.dismiss(loadingToastId);
       toast.error(
@@ -156,58 +158,95 @@ export default function AdminDashboard() {
     checkAllServers();
 
     // Cleanup on unmount or dependency change
+    // eslint-disable-next-line consistent-return
     return () => {
       clearInterval(intervalId);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuctionInProgress, isInitialServersListLoaded]);
 
   return (
     <ProtectedRoute adminOnly>
       <Navbar isLogged />
       <main className='container py-6'>
-        <div className='flex flex-col gap-6 items-start lg:flex-row'>
-          <div className='w-full h-full flex flex-row gap-6 lg:h-1/2'>
-            <div className='h-full w-full bg-secondary border border-primary-border p-6 rounded-xl shadow-sm'>
-              <h2 className='text-xl font-bold tracking-wide font-headline lg:text-2xl'>
-                Action buttons
-              </h2>
-              <p className='text-sm md:text-base'>Set of available actions</p>
-              <div className='pt-6'>
-                <ul className='w-full flex flex-col justify-between items-center gap-4 min-[440px]:flex-row lg:justify-start'>
-                  <li className='w-full lg:w-fit'>
-                    <Button
-                      style='w-full flex gap-2 justify-center items-center'
-                      variant='default'
-                      onClick={handleStartAuction}
-                    >
-                      Start auction
-                      <MdGavel className='h-4 w-4' />
-                    </Button>
-                  </li>
-                  <li className='w-full lg:w-fit'>
-                    <Button
-                      style='w-full flex gap-2 justify-center items-center'
-                      variant='outline'
-                      disabled={isAuctionInProgress}
-                      onClick={() =>
-                        hardReset(getServerAddresses(servers), handleClearData)
-                      }
-                    >
-                      Reset servers
-                      <MdRestore className='h-4 w-4' />
-                    </Button>
-                  </li>
-                  <li className='w-full lg:w-fit'>
-                    <Button
-                      style='w-full flex gap-2 justify-center items-center'
-                      variant='outline'
-                      onClick={() => handleSendInitialData()}
-                    >
-                      Send initial values
-                      <MdCloudUpload className='h-4 w-4' />
-                    </Button>
-                  </li>
-                </ul>
+        <div className='flex flex-col gap-4 items-start lg:flex-row'>
+          <div className='w-full h-full flex flex-row gap-4 lg:h-1/2'>
+            <div className='basis-full flex flex-col gap-4'>
+              <div className='w-full bg-secondary border border-primary-border p-6 rounded-xl shadow-sm'>
+                <h2 className='text-xl font-bold tracking-wide font-headline lg:text-2xl'>
+                  Action buttons
+                </h2>
+                <p className='text-sm md:text-base'>Set of available actions</p>
+                <div className='pt-6'>
+                  <ul className='w-full flex flex-col justify-between items-center gap-4 min-[440px]:flex-row lg:justify-start'>
+                    <li className='w-full lg:w-fit'>
+                      <Button
+                        style='w-full flex gap-2 justify-center items-center'
+                        variant='default'
+                        onClick={handleStartAuction}
+                      >
+                        Start auction
+                        <MdGavel className='h-4 w-4' />
+                      </Button>
+                    </li>
+                    <li className='w-full lg:w-fit'>
+                      <Button
+                        style='w-full flex gap-2 justify-center items-center'
+                        variant='outline'
+                        disabled={isAuctionInProgress}
+                        onClick={() =>
+                          hardReset(
+                            getServerAddresses(servers),
+                            handleClearData,
+                          )
+                        }
+                      >
+                        Reset servers
+                        <MdRestore className='h-4 w-4' />
+                      </Button>
+                    </li>
+                    <li className='w-full lg:w-fit'>
+                      <Button
+                        style='w-full flex gap-2 justify-center items-center'
+                        variant='outline'
+                        onClick={() => handleSendInitialData()}
+                      >
+                        Send initial values
+                        <MdCloudUpload className='h-4 w-4' />
+                      </Button>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <div className='w-full bg-secondary border border-primary-border p-6 rounded-xl shadow-sm'>
+                <h2 className='text-xl font-bold tracking-wide font-headline lg:text-2xl'>
+                  Parameters
+                </h2>
+                <p className='text-sm md:text-base'>Current parameters</p>
+                <div className='pt-6'>
+                  <div className='space-y-3'>
+                    <div className='flex items-center gap-2'>
+                      Prime (p):
+                      <span className='bg-teal-200 px-3 rounded-2xl'>
+                        {Number(PRIME_NUMBER)}
+                      </span>
+                    </div>
+                    <div className='flex items-center gap-2'>
+                      Security Parameter (k):
+                      <span className='bg-teal-200 px-3 rounded-2xl'>{k}</span>
+                    </div>
+                    <div className='flex items-center gap-2'>
+                      Bid Max Bit Length (l):
+                      <span className='bg-teal-200 px-3 rounded-2xl'>{l}</span>
+                    </div>
+                    <div className='flex items-center gap-2'>
+                      Bid value range (2 ^ l - 1):
+                      <span className='bg-teal-200 px-3 rounded-2xl'>
+                        1 - {dataValidation.getMaxBid(l)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             <div className='w-full bg-secondary border border-primary-border p-6 rounded-xl shadow-sm'>

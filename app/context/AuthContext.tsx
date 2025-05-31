@@ -34,8 +34,10 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   servers: string[];
+  // eslint-disable-next-line no-unused-vars
   setUserParamsFromToken: (token: string) => DecodedToken | null;
   logout: () => void;
+  // eslint-disable-next-line no-unused-vars
   loginValidation: (tokens: TokenInfo[]) => void;
 }
 

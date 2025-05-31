@@ -14,6 +14,7 @@ export default function ForgotPassword() {
   const router = useRouter();
   const { isAuthenticated, user } = useAuth();
   const [email, setEmail] = useState('');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 

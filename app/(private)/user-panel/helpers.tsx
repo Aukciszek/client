@@ -12,7 +12,7 @@ export const handleShamir = async (
   const loadingToast = toast.loading(<div>Processing auction bid...</div>, {
     closeOnClick: false,
     draggable: false,
-    autoClose: false
+    autoClose: false,
   });
 
   try {
@@ -53,18 +53,24 @@ export const handleShamir = async (
       toast.error(<div>{errorInfo[0][1]}</div>, {
         autoClose: false,
         closeOnClick: true,
-        draggable: true
+        draggable: true,
       });
       return;
     }
 
     if (messageInfo.length !== 0 && areAllValuesTheSame(messageInfo)) {
       toast.dismiss(loadingToast);
-      toast.success(<div>Successfully submitted bid. Please wait for auction results...</div>, {
-        autoClose: false,
-        closeOnClick: true,
-        draggable: true
-      });
+      toast.success(
+        <div>
+          Successfully submitted bid. After auction is completed, the results
+          will be announced by reverse auction organizer
+        </div>,
+        {
+          autoClose: false,
+          closeOnClick: true,
+          draggable: true,
+        },
+      );
       return;
     }
 
@@ -72,7 +78,7 @@ export const handleShamir = async (
     toast.error(<div>Something went wrong while submitting bid</div>, {
       autoClose: false,
       closeOnClick: true,
-      draggable: true
+      draggable: true,
     });
   } catch (err) {
     toast.dismiss(loadingToast);
@@ -85,8 +91,8 @@ export const handleShamir = async (
       {
         autoClose: false,
         closeOnClick: true,
-        draggable: true
-      }
+        draggable: true,
+      },
     );
   }
 };

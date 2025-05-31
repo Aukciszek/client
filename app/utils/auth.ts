@@ -46,7 +46,7 @@ export const getTokensList = (): string | null => {
 };
 
 // Remove token cookie
-export const removeCookie = ( cookieName: string ): void => {
+export const removeCookie = (cookieName: string): void => {
   const cookies = new Cookies();
   cookies.remove(cookieName, { path: '/' });
 };
@@ -87,7 +87,9 @@ export const parseTokensList = (token: string | null): DecodedToken | null => {
   }
 };
 
-export const parseServersList = (serversFromToken: string | null): string[] | null => {
+export const parseServersList = (
+  serversFromToken: string | null,
+): string[] | null => {
   if (!serversFromToken) return [];
   try {
     const decoded = decodeURIComponent(serversFromToken);
@@ -197,7 +199,6 @@ export const parseTokensListAndServers = (
     serversList = servers;
     setServersListCookie(servers);
 
-
     return { decodedFirstToken, servers };
   } catch (error) {
     toast.error(`Error parsing tokens list: ${error}`);
@@ -211,7 +212,7 @@ export const setServersListCookie = (servers: string[]): void => {
     const encodedServers = JSON.stringify(servers);
     cookies.set('servers_list', encodedServers, {
       path: '/',
-      maxAge: 2592000 // 30 days
+      maxAge: 2592000, // 30 days
     });
     serversList = servers;
   } catch (error) {
@@ -223,13 +224,13 @@ export const setServersListCookie = (servers: string[]): void => {
 export const getServersList = (): string[] => {
   // From JWT
   let servers = serversList;
-  
+
   // From cookie
   if (servers.length === 0) {
     servers = getServersListFromCookie();
     serversList = servers;
   }
-  
+
   return servers;
 };
 
@@ -238,24 +239,24 @@ export const getServersListFromCookie = (): string[] => {
   const cookies = new Cookies();
   try {
     const storedServers = cookies.get('servers_list');
-    
+
     // If no cookie exists, return empty array
     if (!storedServers) {
       return [];
     }
-    
+
     // If the stored value is already an array, return it
     if (Array.isArray(storedServers)) {
       return storedServers;
     }
-    
+
     // If it's a string, try to decode and parse it
     if (typeof storedServers === 'string') {
       const decodedValue = decodeURIComponent(storedServers);
       const parsedServers = JSON.parse(decodedValue);
       return Array.isArray(parsedServers) ? parsedServers : [];
     }
-    
+
     return [];
   } catch (error) {
     toast.error(`Error parsing stored servers list: ${error}`);

@@ -2,7 +2,7 @@ import { getServersList, getTokenForServer } from './utils/auth';
 import { toast } from 'react-toastify';
 import type { Server, SetNumber } from './globalInterface';
 import type { Dispatch, SetStateAction } from 'react';
-import { REFRESH_INTERVAL } from './constants';
+import { PRIME_NUMBER, REFRESH_INTERVAL } from './constants';
 
 // Track the current interval ID and pending checks
 let isChecking = false;
@@ -89,7 +89,10 @@ export const getInitialValues = async (
     });
 };
 
-export const checkServerStatus = async (server: string, isLoading: boolean): Promise<boolean> => {
+export const checkServerStatus = async (
+  server: string,
+  isLoading: boolean,
+): Promise<boolean> => {
   if (!isLoading) {
     try {
       const serverUrl = server.endsWith('/') ? server : `${server}/`;
@@ -154,13 +157,103 @@ export const handleAllServersStatus = (
     if (isChecking) return; // Skip if already checking
     isChecking = true;
 
-    await Promise.all(servers.map(server => 
-      handleCheckStatus(server.id, servers, setServers, isLoading)
-    ));
+    await Promise.all(
+      servers.map((server) =>
+        handleCheckStatus(server.id, servers, setServers, isLoading),
+      ),
+    );
 
     isChecking = false;
   };
 
   // Check status immediately
   checkAllServers();
+};
+
+export const dataValidation = {
+  getMaxA: (l: number, k: number): number => {
+    /*     """
+      Wyznaczenie najwiekszej mozliwej wartosci a (liczba pierwsza musi byc wieksza od a).
+      Zalozenie 1: a = 2^(l+k+1) - r + 2^l + d - s
+      Zalozenie 2: liczba_bitow_random_number = l + k + 1
+      Zalozenie 3: r >= 0
+      Args:
+          l: liczba bitów porównywanych liczb <= l
+          k: parametr dodatkowy, liczba bitów losowego r = l + k + 1
+      """ */
+    const powHi = 2 ** (l + k + 1);
+    const randomNumberBits = l + k + 1;
+    const randomNumberBitsRange = [0, 2 ** randomNumberBits - 1];
+    const powLow = 2 ** l;
+    const comparisonRange = [0, powLow - 1];
+    // a has to be lower than p
+    const plainARange = [
+      powHi + powLow + comparisonRange[0] - comparisonRange[1],
+      powHi + powLow + comparisonRange[1] - comparisonRange[0],
+    ];
+    const maxA = [
+      plainARange[0] - randomNumberBitsRange[1],
+      plainARange[1] - randomNumberBitsRange[0],
+    ];
+
+    return maxA[1];
+  },
+  getMaxP: (l: number, k: number): number => {
+    /* """
+        - Zalozenie 1: a = 2^(l+k+1) - r + 2^l + d - s
+        - Zalozenie 2: liczba bitow losowego r = l + k + 1
+        - Zalozenie 3: r >= 0
+        Wtedy liczba pierwsza p >= 2^(l+k+1) + 2^(l+1)
+        Args:
+            l: liczba bitów porównywanych liczb <= l
+            k: parametr dodatkowy
+        """ */
+    return 2 ** (l + k + 1) + 2 ** (l + 1);
+  },
+  getMaxBid: (l: number): number => {
+    /* """
+    Wyznaczenie maksymalnej wartości licytacji.
+    Założenie 1: a = 2^(l+k+1) - r + 2^l + d - s
+    Założenie 2: liczba_bitow_random_number = l + k + 1
+    Założenie 3: r >= 0
+    Args:
+        l: liczba bitów porównywanych liczb <= l
+        k: parametr dodatkowy, liczba bitów losowego r = l + k + 1
+    """ */
+    return Math.pow(Number(2), l) - 1;
+  },
+  validateP: (l: number, k: number): boolean => {
+    /* """
+    Sprawdzenie, czy p jest większa niż największe możliwe a.
+    Założenie 1: a = 2^(l+k+1) - r + 2^l + d - s
+    Założenie 2: liczba_bitow_random_number = l + k + 1
+    Założenie 3: r >= 0
+    Args:
+        l: liczba bitów porównywanych liczb <= l
+        k: parametr dodatkowy, liczba bitów losowego r = l + k + 1
+        p: liczba pierwsza
+    """ */
+    const p = Number(PRIME_NUMBER);
+    const powHi = 2 ** (l + k + 1);
+    const randomNumberBits = l + k + 1;
+    const randomNumberRange = [0, 2 ** randomNumberBits - 1];
+    const powLow = 2 ** l;
+    const comparisonRange = [0, powLow - 1];
+    // a has to be lower than p
+    // plain a doesn't have to be lower than p when modulus reduction is performed after inclusion of random r
+    const plainARange = [
+      powHi + powLow + comparisonRange[0] - comparisonRange[1],
+      powHi + powLow + comparisonRange[1] - comparisonRange[0],
+    ];
+    const rangeOfA = [
+      plainARange[0] - randomNumberRange[1],
+      plainARange[1] - randomNumberRange[0],
+    ];
+
+    if (p <= rangeOfA[1]) {
+      return false;
+    } else {
+      return true;
+    }
+  },
 };

@@ -611,11 +611,7 @@ export const xor = async (
         body: JSON.stringify({
           calculate_for_xor: true,
         }),
-      }).then(async (res) => {
-        if (!res.ok) {
-          const data = await res.json();
-        }
-      }),
+      })
     );
   }
   await Promise.all(tasks3);
@@ -1301,10 +1297,9 @@ export const comparison = async (
 
 export const performComparison = async (
   serverAddresses: string[],
-  biddersIdsInfo: NumberPair,
+  biddersIdsInfo: number[],
   loadingToastId: string,
 ): Promise<void> => {
-
   let currentWinner = biddersIdsInfo.pop();
   if (!currentWinner) {
     toast.dismiss(loadingToastId);
@@ -1322,7 +1317,7 @@ export const performComparison = async (
       toast.dismiss(loadingToastId);
       return;
     }
-    
+
     await resetComparison(serverAddresses);
 
     for (let round = 0; round < 3; round++) {
@@ -1333,10 +1328,10 @@ export const performComparison = async (
 
     await calculateShareOfRandomNumber(serverAddresses);
 
-    await calculateAComparison(
-      serverAddresses,
-      [currentWinner, currentContender],
-    );
+    await calculateAComparison(serverAddresses, [
+      currentWinner,
+      currentContender,
+    ]);
 
     const promisesReconstructInfo = await promisesReconstruct(serverAddresses);
 
@@ -1347,14 +1342,15 @@ export const performComparison = async (
       k,
     );
 
-    recalculateFinalSecretsInfo = await recalculateFinalSecrets(serverAddresses);
+    recalculateFinalSecretsInfo =
+      await recalculateFinalSecrets(serverAddresses);
 
     const firstResult = recalculateFinalSecretsInfo.finalSecrets[0][1];
 
     // reverse auction - find the smallest bid
     // if the result of comparison is 1 (currentWinner >= currentContender)
     // than change currentWinner = currentContender
-    if (parseInt(firstResult, 16) === 1){
+    if (parseInt(firstResult, 16) === 1) {
       currentWinner = currentContender;
     }
   }
@@ -1364,7 +1360,7 @@ export const performComparison = async (
     toast.error('Error determining auction winner', {
       autoClose: false,
       closeOnClick: true,
-      draggable: true
+      draggable: true,
     });
     return;
   }
