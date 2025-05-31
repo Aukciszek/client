@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { toast } from 'react-toastify';
 
 // No authentication required
-const publicPaths = ['/privacy', '/about', '/terms'];
+const publicPaths = ['/'];
 
 // Non-authenticated only
-const authPaths = ['/sign-in', '/sign-up', '/forgot-password'];
+const authPaths = ['/sign-in', '/sign-up'];
 
 // Admin only
 const adminPaths = ['/admin-dashboard'];
@@ -15,21 +16,23 @@ const userPaths = ['/user-panel'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
+
   // Get auth token from cookies
-  const authToken = request.cookies.get('auth_token');
+  const authToken = request.cookies.get('access_token');
 
   // Handle root path
   if (pathname === '/') {
+    // Handling root path navigation
     if (authToken?.value) {
       try {
         const payload = parseJwt(authToken.value);
-        const redirectUrl = new URL(
-          payload?.admin ? '/admin-dashboard' : '/user-panel',
-          request.url
-        );
+        const targetPath = payload?.isAdmin
+          ? '/admin-dashboard'
+          : '/user-panel';
+        const redirectUrl = new URL(targetPath, request.url);
         return NextResponse.redirect(redirectUrl);
       } catch (error) {
+        toast.error(`Error parsing JWT at root path: ${error}`);
         return NextResponse.next();
       }
     }
@@ -40,12 +43,11 @@ export function middleware(request: NextRequest) {
   if (authToken?.value && authPaths.includes(pathname)) {
     try {
       const payload = parseJwt(authToken.value);
-      const redirectUrl = new URL(
-        payload?.admin ? '/admin-dashboard' : '/user-panel',
-        request.url
-      );
+      const targetPath = payload?.isAdmin ? '/admin-dashboard' : '/user-panel';
+      const redirectUrl = new URL(targetPath, request.url);
       return NextResponse.redirect(redirectUrl);
     } catch (error) {
+      toast.error(`Error parsing JWT at auth path: ${error}`);
       return NextResponse.next();
     }
   }
@@ -56,7 +58,11 @@ export function middleware(request: NextRequest) {
   }
 
   // If no token and trying to access protected route, redirect to login
-  if (!authToken?.value && !publicPaths.includes(pathname) && !authPaths.includes(pathname)) {
+  if (
+    !authToken?.value &&
+    !publicPaths.includes(pathname) &&
+    !authPaths.includes(pathname)
+  ) {
     const signInUrl = new URL('/sign-in', request.url);
     return NextResponse.redirect(signInUrl);
   }
@@ -67,13 +73,13 @@ export function middleware(request: NextRequest) {
       const payload = parseJwt(authToken.value);
 
       // Prevent admin users from accessing user panel
-      if (userPaths.includes(pathname) && payload?.admin) {
+      if (userPaths.includes(pathname) && payload?.isAdmin) {
         const adminDashboardUrl = new URL('/admin-dashboard', request.url);
         return NextResponse.redirect(adminDashboardUrl);
       }
 
       // Prevent regular users from accessing admin routes
-      if (adminPaths.includes(pathname) && !payload?.admin) {
+      if (adminPaths.includes(pathname) && !payload?.isAdmin) {
         const userPanelUrl = new URL('/user-panel', request.url);
         return NextResponse.redirect(userPanelUrl);
       }
@@ -96,3 +102,17 @@ function parseJwt(token: string) {
     return null;
   }
 }
+
+// Configure which routes should use the middleware
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder
+     */
+    '/((?!_next/static|_next/image|favicon.ico|public).*)',
+  ],
+};

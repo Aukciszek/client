@@ -1,3 +1,3 @@
 export interface ServerStatusProps {
-  status: 'online' | 'offline';
+  status: 'online' | 'offline' | 'checking';
 }

@@ -1,10 +1,14 @@
-import type { PromiseResult, StringNumberPair, StringPair } from '../../interface';
+import type {
+  PromiseResult,
+  StringNumberPair,
+  StringPair,
+} from '../../interface';
 
 export interface Server {
   id: string;
   name: string;
   address: string;
-  status: 'online' | 'offline';
+  status: 'online' | 'offline' | 'checking';
 }
 
 export interface PromiseResultWithSecrets extends PromiseResult {

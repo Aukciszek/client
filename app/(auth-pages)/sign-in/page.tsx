@@ -9,18 +9,18 @@ import FormInfo from '@/app/components/form/formInfo';
 import AuthFormWrapper from '@/app/components/authFormWrapper';
 import { useAuth } from '@/app/context/AuthContext';
 import { toast } from 'react-toastify';
-import { loginServer } from '@/app/constants';
+import { LOGIN_SERVER } from '@/app/constants';
 
 export default function SigninPage() {
   const router = useRouter();
-  const { login, isAuthenticated, user } = useAuth();
+  const { setUserParamsFromToken, loginValidation, isAuthenticated, user } =
+    useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Redirect if already authenticated based on admin status
     if (isAuthenticated && user) {
       router.push(user.admin ? '/admin-dashboard' : '/user-panel');
     }
@@ -32,7 +32,7 @@ export default function SigninPage() {
     setError('');
 
     try {
-      const response = await fetch(`${loginServer}/api/auth/login`, {
+      const response = await fetch(`${LOGIN_SERVER}api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -42,19 +42,22 @@ export default function SigninPage() {
 
       const data = await response.json();
 
-      if (!response.ok) { 
+      if (!response.ok) {
         throw new Error(data.detail || 'Invalid credentials');
       }
 
-      // Login with the received token and get user data
-      const token = data.access_tokens[0].access_token.toString();
-      login(token);
-      
+      // Login with the first token and store all tokens
+      const firstToken = data.access_tokens[0].access_token.toString();
+      const firstTokenData = setUserParamsFromToken(firstToken);
+      loginValidation(data.access_tokens);
+
       toast.success('Login successful!');
 
-      // Decode token to get user data for redirection
-      const userData = JSON.parse(atob(token.split('.')[1]));
-      router.push(userData.admin ? '/admin-dashboard' : '/user-panel');
+      if (!firstTokenData) {
+        throw new Error('Invalid token data');
+      }
+
+      router.push(firstTokenData.isAdmin ? '/admin-dashboard' : '/user-panel');
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : 'An error occurred during login';
@@ -88,7 +91,6 @@ export default function SigninPage() {
           value={password}
           setValue={setPassword}
           type='password'
-          forgotPassowrd
         />
         <FormActions isLoading={isLoading} isSignIn />
       </Form>

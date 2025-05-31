@@ -1,108 +1,100 @@
-import type { SetNumber } from '@/app/interface';
 import { toast } from 'react-toastify';
-import type { Dispatch, SetStateAction } from 'react';
 import { PRIME_NUMBER } from '../../constants';
-import type { Server } from '../../globalInterface';
 import { areAllValuesTheSame } from '../admin-dashboard/helpers';
-
-export const getInitialValues = async (
-  setT: SetNumber,
-  setN: SetNumber,
-  setServers: Dispatch<SetStateAction<Server[]>>,
-  initialValuesServer: string,
-): Promise<void> => {
-  const messageInfo: string[] = [];
-  const errorInfo: string[] = [];
-  await fetch(`${initialValuesServer}/api/initial-values`)
-    .then(async (res) => {
-      const data = await res.json();
-      if (!res.ok) {
-        toast.error(data.detail);
-      } else {
-        setT(data.t);
-        setN(data.n);
-        const servers = data.parties.map((party: string) => {
-          return {
-            id: party,
-            name: party,
-            address: party,
-            status: 'online',
-          };
-        });
-        setServers(servers);
-
-        messageInfo.push(data.result);
-      }
-    })
-    .catch((err) => {
-      errorInfo.push(err.message);
-    });
-
-  if (errorInfo.length !== 0 && areAllTheSame(errorInfo)) {
-    toast.error(
-      <div>Something went wrong while retrieving server addresses</div>,
-    );
-    return;
-  }
-
-  if (messageInfo.length !== 0 && areAllTheSame(messageInfo)) {
-    toast.success(<div>Successfully retrieved server addresses</div>);
-    return;
-  }
-
-  toast.error(<div>Something went wrong while submitting bid</div>);
-};
+import { getTokenForServer } from '../../utils/auth';
 
 export const handleShamir = async (
   secret: number,
-  id: number,
   t: number,
   n: number,
   servers: string[],
 ): Promise<void> => {
-  const shares = shamir(t, n, BigInt(secret))[0];
+  const loadingToast = toast.loading(<div>Processing auction bid...</div>, {
+    closeOnClick: false,
+    draggable: false,
+    autoClose: false,
+  });
 
-  const messageInfo: [string, string][] = [];
-  const errorInfo: [string, string][] = [];
+  try {
+    const shares = shamir(t, n, BigInt(secret))[0];
 
-  await Promise.all(
-    servers.map((server, i) =>
-      fetch(`${server}/api/set-shares`, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          client_id: id,
-          share: shares[i][1].toString(16),
-        }),
-      })
-        .then(async (res) => {
-          const data = await res.json();
-          if (!res.ok) {
-            errorInfo.push([server, data.detail]);
-            return;
-          }
-          messageInfo.push([server, data.result]);
+    const messageInfo: [string, string][] = [];
+    const errorInfo: [string, string][] = [];
+
+    await Promise.all(
+      servers.map((server, i) =>
+        fetch(`${server}/api/set-client-shares`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Authorization: `Bearer ${getTokenForServer(server)}`,
+          },
+          body: JSON.stringify({
+            share: shares[i][1].toString(16),
+          }),
         })
-        .catch((err) => {
-          errorInfo.push([server, err.message]);
-        }),
-    ),
-  );
+          .then(async (res) => {
+            const data = await res.json();
+            if (!res.ok) {
+              errorInfo.push([server, data.detail]);
+              return;
+            }
+            messageInfo.push([server, data.result]);
+          })
+          .catch((err) => {
+            errorInfo.push([server, err.message]);
+          }),
+      ),
+    );
 
-  if (errorInfo.length !== 0 && areAllValuesTheSame(errorInfo)) {
-    toast.error(<div>{errorInfo[0][1]}</div>);
-    return;
+    if (errorInfo.length !== 0 && areAllValuesTheSame(errorInfo)) {
+      toast.dismiss(loadingToast);
+      toast.error(<div>{errorInfo[0][1]}</div>, {
+        autoClose: false,
+        closeOnClick: true,
+        draggable: true,
+      });
+      return;
+    }
+
+    if (messageInfo.length !== 0 && areAllValuesTheSame(messageInfo)) {
+      toast.dismiss(loadingToast);
+      toast.success(
+        <div>
+          Successfully submitted bid. After auction is completed, the results
+          will be announced by reverse auction organizer
+        </div>,
+        {
+          autoClose: false,
+          closeOnClick: true,
+          draggable: true,
+        },
+      );
+      return;
+    }
+
+    toast.dismiss(loadingToast);
+    toast.error(<div>Something went wrong while submitting bid</div>, {
+      autoClose: false,
+      closeOnClick: true,
+      draggable: true,
+    });
+  } catch (err) {
+    toast.dismiss(loadingToast);
+    toast.error(
+      err instanceof Error ? (
+        <div>Error submitting bid: {err.message}</div>
+      ) : (
+        <div>An unknown error occurred while submitting bid</div>
+      ),
+      {
+        autoClose: false,
+        closeOnClick: true,
+        draggable: true,
+      },
+    );
   }
-
-  if (messageInfo.length !== 0 && areAllValuesTheSame(messageInfo)) {
-    toast.success(<div>Successfully submitted bid</div>);
-    return;
-  }
-
-  toast.error(<div>Something went wrong while submitting bid</div>);
 };
 
 export function shamir(
@@ -118,10 +110,8 @@ export function shamir(
   coefficients[0] = k0;
 
   if (coefficients[coefficients.length - 1] === BigInt(0)) {
-    coefficients[coefficients.length - 1] = getSecureRandomInt(
-      BigInt(1),
-      p - BigInt(1),
-    );
+    const lastIndex = coefficients.length - 1;
+    coefficients[lastIndex] = getSecureRandomInt(BigInt(1), p - BigInt(1));
   }
 
   const shares: Array<[number, bigint]> = [];
@@ -196,8 +186,9 @@ export const handleMultiplication = async (
     fetch(`${server}/api/redistribute-q`, {
       method: 'POST',
       headers: {
-        'content-type': 'application/json',
+        'Content-Type': 'application/json',
         Accept: 'application/json',
+        Authorization: `Bearer ${getTokenForServer(server)}`,
       },
     })
       .then(async (res) => {
@@ -246,8 +237,9 @@ export const handleMultiplication = async (
     fetch(`${server}/api/redistribute-r`, {
       method: 'POST',
       headers: {
-        'content-type': 'application/json',
+        'Content-Type': 'application/json',
         Accept: 'application/json',
+        Authorization: `Bearer ${getTokenForServer(server)}`,
       },
       body: JSON.stringify({
         first_client_id: firstClientId,
@@ -300,8 +292,9 @@ export const handleMultiplication = async (
     fetch(`${server}/api/calculate-multiplicative-share`, {
       method: 'PUT',
       headers: {
-        'content-type': 'application/json',
+        'Content-Type': 'application/json',
         Accept: 'application/json',
+        Authorization: `Bearer ${getTokenForServer(server)}`,
       },
     })
       .then(async (res) => {
@@ -346,11 +339,12 @@ export const handleMultiplication = async (
   const messageErrorReconstruct: [string, number][] = [];
 
   const promisesReconstruct = servers.map((server) =>
-    fetch(`${server}/api/reconstruct-secret`, {
+    fetch(`${server}/api/reconstruct-secret/comparison_a`, {
       method: 'GET',
       headers: {
-        'content-type': 'application/json',
+        'Content-Type': 'application/json',
         Accept: 'application/json',
+        Authorization: `Bearer ${getTokenForServer(server)}`,
       },
     })
       .then(async (res) => {
