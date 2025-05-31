@@ -203,6 +203,8 @@ export default function ClientDashboard() {
                   value={bidAmount}
                   setValue={setBidAmount}
                   placeholder='Enter your bid amount'
+                  minValue={1}
+                  maxValue={dataValidation.getMaxBid(l)}
                   type='number'
                 />
                 <Button

@@ -41,14 +41,6 @@ export default function SignupPage() {
       return;
     }
 
-    // Validate password length
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      setIsLoading(false);
-      toast.error('Password must be at least 6 characters long');
-      return;
-    }
-
     try {
       const response = await fetch(`${LOGIN_SERVER}api/auth/register`, {
         method: 'POST',
